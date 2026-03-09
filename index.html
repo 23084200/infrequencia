@@ -898,7 +898,6 @@ function salvar(){
 }
 
 // ===== INTEGRAÇÃO COM GOOGLE APPS SCRIPT (SEM LOGIN) =====
-// ⬇ Cole aqui a URL do seu Web App após publicar o script no Google Apps Script
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtCFnQy04NKHcrGVMtsy7FX6mUTrLRUGSvMcPogrMOMIXq6hxrwxKACWTweEdoQjsH/exec';
 
 let scriptConectado = false;
@@ -910,17 +909,32 @@ function driveSetStatus(state, text) {
   document.getElementById('drive-status-text').textContent = text;
 }
 
+// JSONP — contorna CORS sem precisar de headers especiais
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_cb' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('timeout'));
+    }, 10000);
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('erro')); };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    document.head.appendChild(script);
+  });
+}
+
 // Chamado automaticamente ao entrar com PIN
 async function driveConectarAuto() {
-  if (!SCRIPT_URL || SCRIPT_URL.includes('COLE_AQUI')) {
-    driveSetStatus('error', '⚠ URL do script não configurada');
-    document.getElementById('btn-drive-connect').style.display = '';
-    return;
-  }
   driveSetStatus('syncing', 'Carregando dados do servidor...');
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=carregar');
-    const dados = await resp.json();
+    const dados = await jsonp(SCRIPT_URL + '?action=carregar');
     if (dados.ok && Array.isArray(dados.registros)) {
       registros = dados.registros;
       localStorage.setItem('infreq_v3', JSON.stringify(registros));
@@ -930,12 +944,10 @@ async function driveConectarAuto() {
       document.getElementById('btn-drive-sync').style.display = '';
       document.getElementById('btn-drive-disconnect').style.display = '';
     } else {
-      // Servidor acessível mas sem dados ainda
       scriptConectado = true;
       driveSetStatus('connected', '✔ Servidor central conectado (sem dados)');
       document.getElementById('btn-drive-sync').style.display = '';
       document.getElementById('btn-drive-disconnect').style.display = '';
-      // Enviar dados locais para o servidor
       await scriptSalvar();
     }
   } catch(e) {
@@ -945,22 +957,21 @@ async function driveConectarAuto() {
   }
 }
 
-// Botão manual de reconectar (só aparece em caso de erro)
-function driveConectar() {
-  driveConectarAuto();
-}
+// Botão manual de reconectar
+function driveConectar() { driveConectarAuto(); }
 
+// Salvar via GET com os dados codificados na URL (JSONP não suporta POST)
 async function scriptSalvar() {
   if (!scriptConectado) return;
   driveSetStatus('syncing', 'Salvando no servidor...');
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'salvar', registros }),
-      headers: { 'Content-Type': 'text/plain' },
-      mode: 'no-cors'  // Apps Script aceita no-cors; não retorna resposta mas salva
-    });
-    driveSetStatus('connected', `✔ Servidor central — ${registros.length} registros`);
+    const payload = encodeURIComponent(JSON.stringify(registros));
+    const dados = await jsonp(SCRIPT_URL + '?action=salvar&dados=' + payload);
+    if (dados && dados.ok) {
+      driveSetStatus('connected', `✔ Servidor central — ${registros.length} registros`);
+    } else {
+      driveSetStatus('error', '✗ Erro ao salvar');
+    }
   } catch(e) {
     driveSetStatus('error', '✗ Erro ao salvar no servidor');
   }
@@ -970,8 +981,7 @@ async function driveSincronizar() {
   if (!scriptConectado) { driveConectarAuto(); return; }
   driveSetStatus('syncing', 'Sincronizando...');
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=carregar');
-    const dados = await resp.json();
+    const dados = await jsonp(SCRIPT_URL + '?action=carregar');
     if (dados.ok && Array.isArray(dados.registros)) {
       registros = dados.registros;
       localStorage.setItem('infreq_v3', JSON.stringify(registros));
