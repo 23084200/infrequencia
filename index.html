@@ -940,10 +940,6 @@ function driveInicializar() {
 }
 
 function driveConectar() {
-  if (DRIVE_CLIENT_ID.includes('SEU_CLIENT_ID') || DRIVE_CLIENT_ID.trim() === '') {
-    alert('⚠ CLIENT ID não configurado!\n\nEdite o arquivo index.html e substitua DRIVE_CLIENT_ID pelo seu Client ID do Google Cloud Console.');
-    return;
-  }
   if (!driveTokenClient) { toast('Aguarde o carregamento do Google...', true); return; }
   driveSetStatus('syncing', 'Conectando...');
   driveTokenClient.requestAccessToken({ prompt: '' });
