@@ -214,9 +214,9 @@
 <div id="drive-bar" style="display:none">
   <div class="drive-status">
     <div class="dot" id="drive-dot"></div>
-    <span id="drive-status-text">Google Drive desconectado</span>
+    <span id="drive-status-text">Conectando ao Drive…</span>
   </div>
-  <button class="btn-drive primary" id="btn-drive-connect" onclick="driveConectar()">🔗 Conectar ao Drive</button>
+  <button class="btn-drive primary" id="btn-drive-connect" onclick="driveConectar()" style="display:none">🔗 Reconectar</button>
   <button class="btn-drive" id="btn-drive-sync" onclick="driveSincronizar()" style="display:none">↕ Sincronizar</button>
   <button class="btn-drive" id="btn-drive-copyid" onclick="driveCopiarFileId()" style="display:none;border-color:var(--accent);color:var(--accent)" title="Copiar File ID para configurar outros dispositivos">📋 Copiar File ID</button>
   <button class="btn-drive" id="btn-drive-disconnect" onclick="driveDesconectar()" style="display:none">✕ Desconectar</button>
@@ -576,9 +576,10 @@ function confirmarPin(){
     fecharModalPin();
     document.getElementById('tela-acesso').style.display='none';
     document.getElementById('app').classList.add('show');
-    // Mostrar barra do Drive apenas para admin
     document.getElementById('drive-bar').style.display='flex';
     document.body.classList.add('has-drive-bar');
+    // Conectar ao Drive automaticamente ao entrar como admin
+    driveConectarAuto();
   }else{document.getElementById('pin-erro').style.display='block';document.getElementById('pin-input').value='';}
 }
 function sair(){document.getElementById('app').classList.remove('show');document.getElementById('tela-acesso').style.display='flex';document.getElementById('drive-bar').style.display='none';document.body.classList.remove('has-drive-bar');}
@@ -929,7 +930,13 @@ function driveInicializar() {
     client_id: DRIVE_CLIENT_ID,
     scope: DRIVE_SCOPE,
     callback: (resp) => {
-      if (resp.error) { driveSetStatus('error', '✗ Erro ao conectar'); toast('Erro ao conectar ao Drive.', true); return; }
+      if (resp.error) {
+        driveSetStatus('error', '✗ Erro ao conectar');
+        // Mostrar botão de reconectar só em caso de falha
+        document.getElementById('btn-drive-connect').style.display = '';
+        toast('Erro ao conectar ao Drive. Clique em Reconectar.', true);
+        return;
+      }
       driveAccessToken = resp.access_token;
       sessionStorage.setItem('drive_token', driveAccessToken);
       if (DRIVE_FIXED_FILE_ID) driveFileId = DRIVE_FIXED_FILE_ID;
@@ -952,6 +959,23 @@ function driveConectar() {
   if (!driveTokenClient) { toast('Aguarde o carregamento do Google...', true); return; }
   driveSetStatus('syncing', 'Conectando...');
   driveTokenClient.requestAccessToken({ prompt: '' });
+}
+
+// Conexão automática ao entrar com PIN — sem interação manual
+function driveConectarAuto() {
+  // Se já tem token na sessão, reconectar silenciosamente
+  if (sessionStorage.getItem('drive_token')) {
+    // driveInicializar já foi chamado no load e restaurou o token
+    if (driveAccessToken) return; // já conectado
+  }
+  // Aguardar driveTokenClient estar pronto (Google SDK pode ainda estar carregando)
+  const tentarConectar = () => {
+    if (!driveTokenClient) { setTimeout(tentarConectar, 300); return; }
+    driveSetStatus('syncing', 'Conectando ao Drive...');
+    // prompt:'' = sem tela de seleção de conta se já há sessão Google ativa
+    driveTokenClient.requestAccessToken({ prompt: '' });
+  };
+  tentarConectar();
 }
 
 function driveDesconectar() {
