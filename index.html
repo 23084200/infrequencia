@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Infrequência — E.E.M Padre Coriolano</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #0e0f14;
@@ -218,7 +217,6 @@
   </div>
   <button class="btn-drive primary" id="btn-drive-connect" onclick="driveConectar()" style="display:none">🔗 Reconectar</button>
   <button class="btn-drive" id="btn-drive-sync" onclick="driveSincronizar()" style="display:none">↕ Sincronizar</button>
-  <button class="btn-drive" id="btn-drive-copyid" onclick="driveCopiarFileId()" style="display:none;border-color:var(--accent);color:var(--accent)" title="Copiar File ID para configurar outros dispositivos">📋 Copiar File ID</button>
   <button class="btn-drive" id="btn-drive-disconnect" onclick="driveDesconectar()" style="display:none">✕ Desconectar</button>
 </div>
 
@@ -891,106 +889,20 @@ function renderPortal(nome){
 // UTILS
 function formatData(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
 function salvar(){
-  localStorage.setItem('infreq_v3',JSON.stringify(registros));
-  if(driveTokenClient && driveAccessToken) {
-    clearTimeout(driveSaveTimer);
-    driveSaveTimer = setTimeout(()=>driveSalvarArquivo(), 1500);
+  localStorage.setItem('infreq_v3', JSON.stringify(registros));
+  // Sincronizar com servidor central após cada salvamento (admin apenas)
+  if (scriptConectado) {
+    clearTimeout(scriptSaveTimer);
+    scriptSaveTimer = setTimeout(() => scriptSalvar(), 1500);
   }
 }
 
-// ===== GOOGLE DRIVE INTEGRATION =====
-const DRIVE_CLIENT_ID = '88277751970-3u7hlrfejsncup8lt789mt8jlimp6ndr.apps.googleusercontent.com'; // ← substitua pelo seu Client ID
+// ===== INTEGRAÇÃO COM GOOGLE APPS SCRIPT (SEM LOGIN) =====
+// ⬇ Cole aqui a URL do seu Web App após publicar o script no Google Apps Script
+const SCRIPT_URL = 'https://script.google.com/a/macros/prof.ce.gov.br/s/AKfycbyrpgIdYy4N3qTKvA352bMQ0duLBs8ImIur00IWpgZQFOhJNywt6DfOzHSvv7ELQCP4cw/exec';
 
-// ⬇ Cole aqui o File ID após a primeira sincronização (deixe '' para criar automaticamente)
-const DRIVE_FIXED_FILE_ID = '';
-
-const DRIVE_FILE_NAME = 'infrequencia_padre_coriolano.json';
-const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-
-let driveTokenClient = null;
-let driveAccessToken = null;
-let driveFileId = DRIVE_FIXED_FILE_ID || null;
-let driveSaveTimer = null;
-
-function driveInicializar() {
-  // has-drive-bar class is managed by confirmarPin/sair, not here
-  const savedToken = sessionStorage.getItem('drive_token');
-  if (savedToken) {
-    driveAccessToken = savedToken;
-    if (DRIVE_FIXED_FILE_ID) driveFileId = DRIVE_FIXED_FILE_ID;
-    else if (sessionStorage.getItem('drive_file_id')) driveFileId = sessionStorage.getItem('drive_file_id');
-    driveSetStatus('connected', '✔ Drive conectado');
-    document.getElementById('btn-drive-connect').style.display = 'none';
-    document.getElementById('btn-drive-sync').style.display = '';
-    document.getElementById('btn-drive-copyid').style.display = '';
-    document.getElementById('btn-drive-disconnect').style.display = '';
-    driveFileId ? driveCarregarArquivo() : driveBuscarArquivo();
-  }
-  driveTokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: DRIVE_CLIENT_ID,
-    scope: DRIVE_SCOPE,
-    callback: (resp) => {
-      if (resp.error) {
-        driveSetStatus('error', '✗ Erro ao conectar');
-        // Mostrar botão de reconectar só em caso de falha
-        document.getElementById('btn-drive-connect').style.display = '';
-        toast('Erro ao conectar ao Drive. Clique em Reconectar.', true);
-        return;
-      }
-      driveAccessToken = resp.access_token;
-      sessionStorage.setItem('drive_token', driveAccessToken);
-      if (DRIVE_FIXED_FILE_ID) driveFileId = DRIVE_FIXED_FILE_ID;
-      driveSetStatus('connected', '✔ Drive conectado');
-      document.getElementById('btn-drive-connect').style.display = 'none';
-      document.getElementById('btn-drive-sync').style.display = '';
-      document.getElementById('btn-drive-copyid').style.display = '';
-      document.getElementById('btn-drive-disconnect').style.display = '';
-      toast('✔ Conectado ao Google Drive!');
-      driveFileId ? driveCarregarArquivo() : driveBuscarArquivo();
-    },
-  });
-}
-
-function driveConectar() {
-  if (DRIVE_CLIENT_ID.includes('SEU_CLIENT_ID') || DRIVE_CLIENT_ID.trim() === '') {
-    alert('⚠ CLIENT ID não configurado!\n\nEdite o arquivo index.html e substitua DRIVE_CLIENT_ID pelo seu Client ID do Google Cloud Console.');
-    return;
-  }
-  if (!driveTokenClient) { toast('Aguarde o carregamento do Google...', true); return; }
-  driveSetStatus('syncing', 'Conectando...');
-  driveTokenClient.requestAccessToken({ prompt: '' });
-}
-
-// Conexão automática ao entrar com PIN — sem interação manual
-function driveConectarAuto() {
-  // Se já tem token na sessão, reconectar silenciosamente
-  if (sessionStorage.getItem('drive_token')) {
-    // driveInicializar já foi chamado no load e restaurou o token
-    if (driveAccessToken) return; // já conectado
-  }
-  // Aguardar driveTokenClient estar pronto (Google SDK pode ainda estar carregando)
-  const tentarConectar = () => {
-    if (!driveTokenClient) { setTimeout(tentarConectar, 300); return; }
-    driveSetStatus('syncing', 'Conectando ao Drive...');
-    // prompt:'' = sem tela de seleção de conta se já há sessão Google ativa
-    driveTokenClient.requestAccessToken({ prompt: '' });
-  };
-  tentarConectar();
-}
-
-function driveDesconectar() {
-  if (driveAccessToken) google.accounts.oauth2.revoke(driveAccessToken, () => {});
-  driveAccessToken = null;
-  driveFileId = DRIVE_FIXED_FILE_ID || null;
-  sessionStorage.removeItem('drive_token');
-  sessionStorage.removeItem('drive_file_id');
-  driveSetStatus('', 'Google Drive desconectado');
-  document.getElementById('btn-drive-connect').style.display = '';
-  document.getElementById('btn-drive-sync').style.display = 'none';
-  document.getElementById('btn-drive-copyid').style.display = 'none';
-  document.getElementById('btn-drive-disconnect').style.display = 'none';
-  toast('Desconectado do Drive.');
-}
+let scriptConectado = false;
+let scriptSaveTimer = null;
 
 function driveSetStatus(state, text) {
   const dot = document.getElementById('drive-dot');
@@ -998,95 +910,89 @@ function driveSetStatus(state, text) {
   document.getElementById('drive-status-text').textContent = text;
 }
 
-function driveCopiarFileId() {
-  if (!driveFileId) { toast('Nenhum arquivo no Drive ainda. Registre um dado primeiro.', true); return; }
-  navigator.clipboard.writeText(driveFileId).then(() => {
-    toast('✔ File ID copiado! Cole em DRIVE_FIXED_FILE_ID no index.html');
-  }).catch(() => {
-    prompt('Copie o File ID e cole em DRIVE_FIXED_FILE_ID no index.html:', driveFileId);
-  });
-}
-
-async function driveBuscarArquivo() {
-  driveSetStatus('syncing', 'Buscando dados no Drive...');
+// Chamado automaticamente ao entrar com PIN
+async function driveConectarAuto() {
+  if (!SCRIPT_URL || SCRIPT_URL.includes('COLE_AQUI')) {
+    driveSetStatus('error', '⚠ URL do script não configurada');
+    document.getElementById('btn-drive-connect').style.display = '';
+    return;
+  }
+  driveSetStatus('syncing', 'Carregando dados do servidor...');
   try {
-    const resp = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}'+and+trashed=false&fields=files(id,name,modifiedTime)`,
-      { headers: { Authorization: `Bearer ${driveAccessToken}` } }
-    );
-    const data = await resp.json();
-    if (data.files && data.files.length > 0) {
-      driveFileId = data.files[0].id;
-      sessionStorage.setItem('drive_file_id', driveFileId);
-      await driveCarregarArquivo();
-    } else {
-      driveSetStatus('connected', '✔ Drive conectado (sem dados salvos)');
-    }
-  } catch(e) { driveSetStatus('error', '✗ Erro ao buscar no Drive'); }
-}
-
-async function driveCarregarArquivo() {
-  try {
-    const resp = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
-      { headers: { Authorization: `Bearer ${driveAccessToken}` } }
-    );
+    const resp = await fetch(SCRIPT_URL + '?action=carregar');
     const dados = await resp.json();
-    if (Array.isArray(dados) && dados.length > 0) {
-      registros = dados;
+    if (dados.ok && Array.isArray(dados.registros)) {
+      registros = dados.registros;
       localStorage.setItem('infreq_v3', JSON.stringify(registros));
       renderHistorico(); renderStats();
-      driveSetStatus('connected', `✔ Drive sincronizado — ${registros.length} registros`);
-      toast(`✔ ${registros.length} registros carregados do Drive!`);
+      scriptConectado = true;
+      driveSetStatus('connected', `✔ Servidor central — ${registros.length} registros`);
+      document.getElementById('btn-drive-sync').style.display = '';
+      document.getElementById('btn-drive-disconnect').style.display = '';
     } else {
-      driveSetStatus('connected', '✔ Drive conectado (arquivo vazio)');
+      // Servidor acessível mas sem dados ainda
+      scriptConectado = true;
+      driveSetStatus('connected', '✔ Servidor central conectado (sem dados)');
+      document.getElementById('btn-drive-sync').style.display = '';
+      document.getElementById('btn-drive-disconnect').style.display = '';
+      // Enviar dados locais para o servidor
+      await scriptSalvar();
     }
-  } catch(e) { driveSetStatus('error', '✗ Erro ao carregar do Drive'); }
+  } catch(e) {
+    driveSetStatus('error', '✗ Erro ao conectar ao servidor');
+    document.getElementById('btn-drive-connect').style.display = '';
+    toast('Erro ao conectar ao servidor central.', true);
+  }
 }
 
-async function driveSalvarArquivo() {
-  if (!driveAccessToken) return;
-  driveSetStatus('syncing', 'Salvando no Drive...');
-  const blob = new Blob([JSON.stringify(registros)], { type: 'application/json' });
+// Botão manual de reconectar (só aparece em caso de erro)
+function driveConectar() {
+  driveConectarAuto();
+}
+
+async function scriptSalvar() {
+  if (!scriptConectado) return;
+  driveSetStatus('syncing', 'Salvando no servidor...');
   try {
-    let resp;
-    if (driveFileId) {
-      resp = await fetch(
-        `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
-        { method: 'PATCH', headers: { Authorization: `Bearer ${driveAccessToken}`, 'Content-Type': 'application/json' }, body: blob }
-      );
-    } else {
-      const meta = { name: DRIVE_FILE_NAME };
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
-      form.append('file', blob);
-      resp = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
-        { method: 'POST', headers: { Authorization: `Bearer ${driveAccessToken}` }, body: form }
-      );
-      const created = await resp.json();
-      driveFileId = created.id;
-      sessionStorage.setItem('drive_file_id', driveFileId);
-      toast('💡 Novo arquivo criado! Clique em "📋 Copiar File ID" e cole no código (DRIVE_FIXED_FILE_ID) para todos usarem o mesmo arquivo.');
-    }
-    driveSetStatus('connected', `✔ Drive salvo — ${registros.length} registros`);
-  } catch(e) { driveSetStatus('error', '✗ Erro ao salvar no Drive'); }
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'salvar', registros }),
+      headers: { 'Content-Type': 'text/plain' },
+      mode: 'no-cors'  // Apps Script aceita no-cors; não retorna resposta mas salva
+    });
+    driveSetStatus('connected', `✔ Servidor central — ${registros.length} registros`);
+  } catch(e) {
+    driveSetStatus('error', '✗ Erro ao salvar no servidor');
+  }
 }
 
 async function driveSincronizar() {
-  if (!driveAccessToken) { toast('Conecte ao Drive primeiro.', true); return; }
-  driveFileId ? await driveCarregarArquivo() : await driveBuscarArquivo();
+  if (!scriptConectado) { driveConectarAuto(); return; }
+  driveSetStatus('syncing', 'Sincronizando...');
+  try {
+    const resp = await fetch(SCRIPT_URL + '?action=carregar');
+    const dados = await resp.json();
+    if (dados.ok && Array.isArray(dados.registros)) {
+      registros = dados.registros;
+      localStorage.setItem('infreq_v3', JSON.stringify(registros));
+      renderHistorico(); renderStats();
+      driveSetStatus('connected', `✔ Servidor central — ${registros.length} registros`);
+      toast(`✔ ${registros.length} registros sincronizados!`);
+    }
+  } catch(e) {
+    driveSetStatus('error', '✗ Erro ao sincronizar');
+    toast('Erro ao sincronizar com servidor.', true);
+  }
 }
 
-// Inicializar Drive quando a API do Google carregar
-window.addEventListener('load', () => {
-  const waitGoogle = setInterval(() => {
-    if (window.google && google.accounts) {
-      clearInterval(waitGoogle);
-      driveInicializar();
-    }
-  }, 300);
-});
+function driveDesconectar() {
+  scriptConectado = false;
+  driveSetStatus('', 'Servidor desconectado');
+  document.getElementById('btn-drive-connect').style.display = '';
+  document.getElementById('btn-drive-sync').style.display = 'none';
+  document.getElementById('btn-drive-disconnect').style.display = 'none';
+  toast('Desconectado do servidor central.');
+}
 function deletar(id){if(!confirm('Remover este registro?'))return;registros=registros.filter(r=>r.id!==id);salvar();renderHistorico();toast('Registro removido.');}
 function limparTudo(){if(!confirm('Apagar TODOS os registros? Ação irreversível.'))return;registros=[];salvar();renderHistorico();toast('Todos os registros apagados.');}
 function exportarCSV(){
