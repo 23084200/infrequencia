@@ -71,7 +71,92 @@
   .tab:hover { color:var(--text); background:var(--surface2); }
   .tab.active { color:var(--accent); background:var(--bg); border-color:var(--border); }
   .main { padding:24px 28px; max-width:1100px; margin:0 auto; }
-  @media (max-width:700px) { .main{padding:16px 14px;} header{padding:12px 14px;} .tabs{padding:10px 14px 0;} .registro-grid{grid-template-columns:1fr!important;} }
+  @media (max-width:700px) {
+    /* Layout geral */
+    .main { padding:12px 10px; }
+    header { padding:10px 12px; }
+    header h1 { font-size:0.82rem; }
+    .header-right span { display:none; }
+    .tabs { padding:8px 10px 0; gap:2px; }
+    .tab { padding:8px 11px; font-size:0.7rem; }
+    .registro-grid { grid-template-columns:1fr !important; gap:12px; }
+
+    /* Cards */
+    .card { padding:14px 12px; }
+    .card h3 { font-size:0.68rem; margin-bottom:10px; }
+
+    /* Inputs maiores para toque */
+    select, input[type="date"], input[type="text"], input[type="password"], textarea {
+      font-size:0.95rem; padding:11px 12px;
+    }
+    label { font-size:0.7rem; margin-top:14px; }
+
+    /* Botões de tipo de falta empilhados */
+    .tipo-falta-btns { flex-direction:column; gap:8px; }
+    .tipo-btn { flex-direction:row; padding:12px 14px; gap:12px; text-align:left; align-items:center; }
+    .tipo-btn .tipo-icon { font-size:1.6rem; }
+    .tipo-btn .tipo-titulo { font-size:0.78rem; }
+    .tipo-btn .tipo-sub { font-size:0.66rem; }
+
+    /* Grid de aulas maior para toque */
+    .aulas-grid { grid-template-columns:repeat(5,1fr); gap:6px; }
+    .aula-btn { padding:10px 3px; font-size:0.8rem; }
+    .aula-time { font-size:0.58rem; }
+
+    /* Botão registrar */
+    .btn-registrar { padding:15px; font-size:0.95rem; margin-top:14px; }
+
+    /* Filtros do histórico em coluna */
+    .filters-row { flex-direction:column; gap:8px; }
+    .filters-row > div { min-width:unset; width:100%; }
+
+    /* Tabela do histórico → cards empilhados */
+    table, thead, tbody, th, td, tr { display:block; }
+    thead { display:none; }
+    tbody tr {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:8px; margin-bottom:10px; padding:12px 14px;
+      position:relative;
+    }
+    tbody tr:hover { background:var(--surface); }
+    tbody td { padding:3px 0; font-size:0.8rem; border:none; }
+    tbody td:empty { display:none; }
+    tbody td::before {
+      content:attr(data-label);
+      display:inline-block; width:100px;
+      font-size:0.62rem; color:var(--muted);
+      text-transform:uppercase; letter-spacing:0.05em;
+      vertical-align:top; margin-right:6px;
+    }
+    tbody td:last-child { position:absolute; top:10px; right:10px; }
+    tbody td:last-child::before { display:none; }
+
+    /* Stats */
+    .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+    .stat-card .num { font-size:1.5rem; }
+
+    /* Portal professor */
+    .portal-header { padding:10px 12px; }
+    .portal-content { padding:14px 10px; }
+    .portal-login { margin:30px auto; padding:0 16px; }
+    .summary-banner { gap:16px; padding:14px 16px; }
+    .summary-item .num { font-size:1.6rem; }
+
+    /* Falta items no portal */
+    .falta-item { flex-direction:column; gap:8px; padding:12px; }
+    .falta-item .status-col { text-align:left; min-width:unset; }
+
+    /* Toast na parte de baixo centralizado */
+    .toast { right:12px; left:12px; text-align:center; bottom:16px; }
+
+    /* Tela de acesso */
+    .acesso-cards { flex-direction:column; gap:12px; width:100%; max-width:320px; }
+    .acesso-card { padding:22px 20px; min-width:unset; width:100%; }
+
+    /* Barra do Drive */
+    #drive-bar { font-size:0.65rem; padding:5px 10px; gap:8px; flex-wrap:wrap; }
+    .btn-drive { padding:3px 8px; font-size:0.62rem; }
+  }
   .registro-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:24px; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
   .card h3 { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
@@ -303,6 +388,16 @@
             <select id="turma"><option value="">— sem turma específica —</option></select>
             <label>Observação (opcional)</label>
             <textarea id="obs" placeholder="Motivo, substituto, atestado..."></textarea>
+            <label>Responsável pelo Registro <span style="color:var(--accent2)">*</span></label>
+            <select id="coordenador">
+              <option value="">— selecione o responsável —</option>
+              <option>ELDER</option>
+              <option>FLÁVIA</option>
+              <option>IVANILSON</option>
+              <option>NAILA</option>
+              <option>NAIARA</option>
+              <option>QUEIROZ</option>
+            </select>
           </div>
         </div>
         <div>
@@ -686,8 +781,34 @@ function registrarFalta(){
   const cargo=document.getElementById('cargo').value.trim();
   const turma=document.getElementById('turma').value;
   const obs=document.getElementById('obs').value.trim();
+  const coordenador=document.getElementById('coordenador').value;
   if(!data||!dia||!professor){toast('⚠ Preencha: data, dia da semana e nome do professor.',true);return;}
   if(tipoFalta==='aulas' && aulasF.size===0){toast('⚠ Selecione ao menos uma aula.',true);return;}
+  if(!coordenador){toast('⚠ Selecione o responsável pelo registro.',true);return;}
+
+  const ord=['M1','M2','M3','M4','M5','T1','T2','T3','T4','T5','N1','N2','N3','N4'];
+  const aulasOrdenadas = tipoFalta==='aulas'
+    ? [...aulasF].sort((a,b)=>ord.indexOf(a)-ord.indexOf(b))
+    : [];
+
+  // ── Verificar duplicidade ──────────────────────────────────
+  const duplicado = registros.find(r => {
+    if(r.tipo !== 'falta') return false;
+    if(r.professor !== professor) return false;
+    if(r.data !== data) return false;
+    if(r.turma !== turma) return false;
+    // Falta do dia inteiro conflita com qualquer outra falta no mesmo dia/turma
+    if(r.modalidade === 'DIA' || tipoFalta === 'dia') return true;
+    // Falta por aulas: checar se há aulas em comum
+    return r.aulas.some(a => aulasOrdenadas.includes(a));
+  });
+
+  if(duplicado){
+    const aulasConflito = duplicado.modalidade==='DIA' ? 'dia inteiro' : duplicado.aulas.join(', ');
+    toast(`⚠ Já existe falta de ${professor}${turma?' na turma '+turma:''} em ${data} (${aulasConflito}).`, true);
+    return;
+  }
+  // ──────────────────────────────────────────────────────────
 
   // Salvar novo nome se necessário
   if(professor && !PROFS.includes(professor)){
@@ -697,16 +818,12 @@ function registrarFalta(){
     atualizarDatalistProfs();
   }
 
-  const ord=['M1','M2','M3','M4','M5','T1','T2','T3','T4','T5','N1','N2','N3','N4'];
-  const aulasOrdenadas = tipoFalta==='aulas'
-    ? [...aulasF].sort((a,b)=>ord.indexOf(a)-ord.indexOf(b))
-    : []; // falta do dia: sem aulas
   const turno = tipoFalta==='aulas' ? derTurno(aulasOrdenadas) : '';
 
   registros.unshift({
     id:Date.now(), tipo:'falta', modalidade: tipoFalta==='dia'?'DIA':'AULAS',
     data, dia, professor, cargo, turma, turno,
-    aulas: aulasOrdenadas, obs,
+    aulas: aulasOrdenadas, obs, coordenador,
     recuperada:false, recuperacaoId:null, criadoEm:new Date().toISOString()
   });
   salvar();
@@ -720,6 +837,7 @@ function registrarFalta(){
   document.getElementById('cargo').value='';
   document.getElementById('turma').value='';
   document.getElementById('professor').value='';
+  document.getElementById('coordenador').value='';
 }
 // Deriva o turno "principal" de uma lista de códigos de aula
 function derTurno(aulas){
@@ -733,11 +851,12 @@ function derTurno(aulas){
 
 // RECUPERAÇÃO
 function filtrarPendentes(){
+  const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const prof=document.getElementById('rec-prof').value.trim().toUpperCase();
   const lista=document.getElementById('lista-pendentes');
   faltaLinkId=null;
   if(!prof){lista.innerHTML='<div style="color:var(--muted);font-size:0.75rem;padding:8px 0">Digite o nome do professor acima.</div>';return;}
-  const pend=registros.filter(r=>r.tipo==='falta'&&r.professor===prof&&!r.recuperada);
+  const pend=registros.filter(r=>r.tipo==='falta'&&normS(r.professor)===normS(prof)&&!r.recuperada);
   if(pend.length===0){lista.innerHTML='<div style="color:var(--green);font-size:0.75rem;padding:8px 0">✔ Sem faltas pendentes para este professor.</div>';return;}
   lista.innerHTML=pend.map(r=>`
     <div class="falta-option" id="fo-${r.id}" onclick="selecionarFalta(${r.id})">
@@ -773,28 +892,30 @@ function registrarRecuperacao(){
 
 // HISTÓRICO
 function renderHistorico(){
-  const fp=document.getElementById('fp').value.toLowerCase();
+  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const fp=norm(document.getElementById('fp').value);
   const ft=document.getElementById('ft').value;
   const ftr=document.getElementById('ftr').value;
   const fd=document.getElementById('fd').value;
   const ftu=document.getElementById('ftu').value;
-  const fil=registros.filter(r=>(!fp||r.professor.toLowerCase().includes(fp))&&(!ft||r.tipo===ft)&&(!ftr||r.turno===ftr)&&(!fd||r.dia===fd)&&(!ftu||r.turma===ftu));
+  const fil=registros.filter(r=>(!fp||norm(r.professor).includes(fp))&&(!ft||r.tipo===ft)&&(!ftr||r.turno===ftr)&&(!fd||r.dia===fd)&&(!ftu||r.turma===ftu));
   const c=document.getElementById('hist-container');
   if(fil.length===0){c.innerHTML=`<div class="empty-state"><div class="icon">📋</div>Nenhum registro encontrado</div>`;return;}
-  c.innerHTML=`<table><thead><tr><th>Data</th><th>Tipo</th><th>Professor(a)</th><th>Turma</th><th>Turno</th><th>Aulas</th><th>Status</th><th>Obs</th><th></th></tr></thead><tbody>
+  c.innerHTML=`<table><thead><tr><th>Data</th><th>Tipo</th><th>Professor(a)</th><th>Turma</th><th>Turno</th><th>Aulas</th><th>Status</th><th>Obs</th><th>Registrado por</th><th></th></tr></thead><tbody>
     ${fil.map(r=>`<tr>
-      <td>${formatData(r.data)}</td>
-      <td>${r.tipo==='falta'
+      <td data-label="Data">${formatData(r.data)}</td>
+      <td data-label="Tipo">${r.tipo==='falta'
         ? `<span class="tag" style="background:#2a0e14;color:var(--accent2)">FALTA</span>${r.modalidade==='DIA'?'<br><span class="tag" style="background:#1a1200;color:#c8a840;font-size:0.58rem;margin-top:3px">📅 DIA</span>':'<br><span class="tag" style="background:#0e1a1a;color:#40b0c8;font-size:0.58rem;margin-top:3px">🕐 AULAS</span>'}`
         : '<span class="tag tag-rec">RECUP.</span>'}</td>
-      <td style="font-weight:600">${r.professor}${r.cargo?`<br><span style="font-size:0.65rem;color:var(--muted);font-weight:400">${r.cargo}</span>`:''}</td>
-      <td>${r.turma?(TURMA_MAP[r.turma]?.nome||r.turma):'<span style="color:var(--muted)">—</span>'}</td>
-      <td><span class="tag ${TT[r.turno]||''}">${TN[r.turno]||'<span style="color:var(--muted)">—</span>'}</span></td>
-      <td style="color:${r.tipo==='falta'?'var(--accent)':'var(--green)'}">
+      <td data-label="Professor(a)" style="font-weight:600">${r.professor}${r.cargo?`<br><span style="font-size:0.65rem;color:var(--muted);font-weight:400">${r.cargo}</span>`:''}</td>
+      <td data-label="Turma">${r.turma?(TURMA_MAP[r.turma]?.nome||r.turma):'<span style="color:var(--muted)">—</span>'}</td>
+      <td data-label="Turno"><span class="tag ${TT[r.turno]||''}">${TN[r.turno]||'<span style="color:var(--muted)">—</span>'}</span></td>
+      <td data-label="Aulas" style="color:${r.tipo==='falta'?'var(--accent)':'var(--green)'}">
         ${r.aulas&&r.aulas.length>0 ? r.aulas.join(', ') : '<span style="color:var(--muted);font-size:0.72rem">Falta do dia</span>'}
       </td>
-      <td>${r.tipo==='falta'?(r.recuperada?'<span class="tag tag-rec">✔ Recup.</span>':'<span class="tag tag-pend">Pendente</span>'):'—'}</td>
-      <td style="color:var(--muted);font-size:0.73rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.obs||'—'}</td>
+      <td data-label="Status">${r.tipo==='falta'?(r.recuperada?'<span class="tag tag-rec">✔ Recup.</span>':'<span class="tag tag-pend">Pendente</span>'):'—'}</td>
+      <td data-label="Obs" style="color:var(--muted);font-size:0.73rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.obs||'—'}</td>
+      <td data-label="Responsável" style="font-size:0.72rem;color:var(--accent3);white-space:nowrap">${r.coordenador||'<span style="color:var(--muted)">—</span>'}</td>
       <td><button class="btn-del" onclick="deletar(${r.id})">✕</button></td>
     </tr>`).join('')}
   </tbody></table>`;
@@ -833,8 +954,9 @@ function renderStats(){
 
 // PORTAL PROFESSOR
 function entrarPortal(){
+  const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const nome=document.getElementById('portal-nome').value.trim().toUpperCase();
-  const mf=registros.filter(r=>r.tipo==='falta'&&r.professor===nome);
+  const mf=registros.filter(r=>r.tipo==='falta'&&normS(r.professor)===normS(nome));
   if(mf.length===0){document.getElementById('portal-erro').style.display='block';return;}
   document.getElementById('portal-erro').style.display='none';
   document.getElementById('portal-login-area').style.display='none';
@@ -842,7 +964,8 @@ function entrarPortal(){
   document.getElementById('portal-dash').style.display='block';
 }
 function renderPortal(nome){
-  const F=registros.filter(r=>r.tipo==='falta'&&r.professor===nome);
+  const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const F=registros.filter(r=>r.tipo==='falta'&&normS(r.professor)===normS(nome));
   const pend=F.filter(r=>!r.recuperada);
   const rec=F.filter(r=>r.recuperada);
   const tA=F.reduce((s,r)=>s+r.aulas.length,0);
@@ -1007,8 +1130,8 @@ function deletar(id){if(!confirm('Remover este registro?'))return;registros=regi
 function limparTudo(){if(!confirm('Apagar TODOS os registros? Ação irreversível.'))return;registros=[];salvar();renderHistorico();toast('Todos os registros apagados.');}
 function exportarCSV(){
   if(registros.length===0){toast('Nenhum dado para exportar.',true);return;}
-  const h='Tipo,Data,Dia,Professor,Cargo,Turma,Turno,Aulas,Status,Observação\n';
-  const rows=registros.map(r=>`${r.tipo},${r.data},${r.dia||''},${r.professor},"${r.cargo||''}",${r.turma||''},${r.turno},"${r.aulas.join(' ')}",${r.tipo==='falta'?(r.recuperada?'Recuperada':'Pendente'):'—'},"${r.obs||''}"`).join('\n');
+  const h='Tipo,Data,Dia,Professor,Cargo,Turma,Turno,Aulas,Status,Observação,Registrado por\n';
+  const rows=registros.map(r=>`${r.tipo},${r.data},${r.dia||''},${r.professor},"${r.cargo||''}",${r.turma||''},${r.turno},"${r.aulas.join(' ')}",${r.tipo==='falta'?(r.recuperada?'Recuperada':'Pendente'):'—'},"${r.obs||''}","${r.coordenador||''}"`).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv;charset=utf-8;'}));
   a.download=`infrequencia_${new Date().toISOString().split('T')[0]}.csv`;a.click();toast('CSV exportado!');
 }
