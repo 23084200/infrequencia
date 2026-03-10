@@ -130,6 +130,7 @@
     }
     tbody td:last-child { position:absolute; top:10px; right:10px; }
     tbody td:last-child::before { display:none; }
+    tbody td[data-label="Turmas / Aulas / Status"] > div { border-bottom:none !important; }
 
     /* Stats */
     .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
@@ -901,24 +902,79 @@ function renderHistorico(){
   const fil=registros.filter(r=>(!fp||norm(r.professor).includes(fp))&&(!ft||r.tipo===ft)&&(!ftr||r.turno===ftr)&&(!fd||r.dia===fd)&&(!ftu||r.turma===ftu));
   const c=document.getElementById('hist-container');
   if(fil.length===0){c.innerHTML=`<div class="empty-state"><div class="icon">📋</div>Nenhum registro encontrado</div>`;return;}
-  c.innerHTML=`<table><thead><tr><th>Data</th><th>Tipo</th><th>Professor(a)</th><th>Turma</th><th>Turno</th><th>Aulas</th><th>Status</th><th>Obs</th><th>Registrado por</th><th></th></tr></thead><tbody>
-    ${fil.map(r=>`<tr>
-      <td data-label="Data">${formatData(r.data)}</td>
-      <td data-label="Tipo">${r.tipo==='falta'
-        ? `<span class="tag" style="background:#2a0e14;color:var(--accent2)">FALTA</span>${r.modalidade==='DIA'?'<br><span class="tag" style="background:#1a1200;color:#c8a840;font-size:0.58rem;margin-top:3px">📅 DIA</span>':'<br><span class="tag" style="background:#0e1a1a;color:#40b0c8;font-size:0.58rem;margin-top:3px">🕐 AULAS</span>'}`
-        : '<span class="tag tag-rec">RECUP.</span>'}</td>
-      <td data-label="Professor(a)" style="font-weight:600">${r.professor}${r.cargo?`<br><span style="font-size:0.65rem;color:var(--muted);font-weight:400">${r.cargo}</span>`:''}</td>
-      <td data-label="Turma">${r.turma?(TURMA_MAP[r.turma]?.nome||r.turma):'<span style="color:var(--muted)">—</span>'}</td>
-      <td data-label="Turno"><span class="tag ${TT[r.turno]||''}">${TN[r.turno]||'<span style="color:var(--muted)">—</span>'}</span></td>
-      <td data-label="Aulas" style="color:${r.tipo==='falta'?'var(--accent)':'var(--green)'}">
-        ${r.aulas&&r.aulas.length>0 ? r.aulas.join(', ') : '<span style="color:var(--muted);font-size:0.72rem">Falta do dia</span>'}
-      </td>
-      <td data-label="Status">${r.tipo==='falta'?(r.recuperada?'<span class="tag tag-rec">✔ Recup.</span>':'<span class="tag tag-pend">Pendente</span>'):'—'}</td>
-      <td data-label="Obs" style="color:var(--muted);font-size:0.73rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.obs||'—'}</td>
-      <td data-label="Responsável" style="font-size:0.72rem;color:var(--accent3);white-space:nowrap">${r.coordenador||'<span style="color:var(--muted)">—</span>'}</td>
-      <td><button class="btn-del" onclick="deletar(${r.id})">✕</button></td>
-    </tr>`).join('')}
-  </tbody></table>`;
+
+  // Agrupar por professor + data + tipo
+  const grupos = {};
+  fil.forEach(r => {
+    const chave = `${r.professor}||${r.data}||${r.tipo}`;
+    if(!grupos[chave]) grupos[chave] = [];
+    grupos[chave].push(r);
+  });
+
+  // Ordenar grupos pela data do primeiro registro de cada grupo (mais recente primeiro)
+  const gruposOrdenados = Object.values(grupos).sort((a, b) => {
+    const da = a[0].data, db = b[0].data;
+    if(da !== db) return db.localeCompare(da);
+    return a[0].professor.localeCompare(b[0].professor);
+  });
+
+  const linhas = gruposOrdenados.map(grupo => {
+    const r0 = grupo[0]; // referência principal
+    const ids = grupo.map(r => r.id);
+
+    // Montar células de turmas agrupadas: cada turma com suas aulas
+    const turmasHtml = grupo.map(r => {
+      const nomeTurma = r.turma ? (TURMA_MAP[r.turma]?.nome || r.turma) : null;
+      const aulasStr = r.aulas && r.aulas.length > 0
+        ? `<span style="color:${r.tipo==='falta'?'var(--accent)':'var(--green)'};font-size:0.75rem">${r.aulas.join(', ')}</span>`
+        : `<span style="color:var(--muted);font-size:0.72rem">Dia todo</span>`;
+      const turnoBadge = `<span class="tag ${TT[r.turno]||''}" style="font-size:0.6rem">${TN[r.turno]||''}</span>`;
+      const statusBadge = r.tipo==='falta'
+        ? (r.recuperada ? '<span class="tag tag-rec" style="font-size:0.6rem">✔ Recup.</span>' : '<span class="tag tag-pend" style="font-size:0.6rem">Pend.</span>')
+        : '';
+      return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0;${grupo.length>1?'border-bottom:1px solid var(--border);':''}">
+        ${nomeTurma ? `<span style="font-size:0.78rem;font-weight:600;min-width:130px">${nomeTurma}</span>` : '<span style="color:var(--muted);font-size:0.78rem;min-width:130px">—</span>'}
+        ${turnoBadge}
+        ${aulasStr}
+        ${statusBadge}
+      </div>`;
+    }).join('');
+
+    // Tipo unificado do grupo
+    const tiposSet = [...new Set(grupo.map(r => r.modalidade))];
+    const tipoHtml = r0.tipo==='falta'
+      ? `<span class="tag" style="background:#2a0e14;color:var(--accent2)">FALTA</span>`
+        + (tiposSet.includes('DIA') ? '<br><span class="tag" style="background:#1a1200;color:#c8a840;font-size:0.58rem;margin-top:3px">📅 DIA</span>' : '')
+        + (tiposSet.includes('AULAS') ? '<br><span class="tag" style="background:#0e1a1a;color:#40b0c8;font-size:0.58rem;margin-top:3px">🕐 AULAS</span>' : '')
+      : '<span class="tag tag-rec">RECUP.</span>';
+
+    // Observações e coordenadores únicos
+    const obsTextos = [...new Set(grupo.map(r=>r.obs).filter(Boolean))].join(' · ');
+    const coordTextos = [...new Set(grupo.map(r=>r.coordenador).filter(Boolean))].join(', ');
+
+    // Botão deletar: se só 1 registro usa deletar direto; se múltiplos, oferece confirmação de grupo
+    const btnDel = ids.length === 1
+      ? `<button class="btn-del" onclick="deletar(${ids[0]})">✕</button>`
+      : `<button class="btn-del" style="font-size:0.62rem" onclick="deletarGrupo([${ids.join(',')}])" title="Remover todos os ${ids.length} registros deste grupo">✕ ${ids.length}</button>`;
+
+    return `<tr>
+      <td data-label="Data" style="white-space:nowrap;vertical-align:top;padding-top:13px">${formatData(r0.data)}${r0.dia?`<br><span style="font-size:0.65rem;color:var(--muted)">${r0.dia}</span>`:''}</td>
+      <td data-label="Tipo" style="vertical-align:top;padding-top:13px">${tipoHtml}</td>
+      <td data-label="Professor(a)" style="font-weight:600;vertical-align:top;padding-top:13px">${r0.professor}${r0.cargo?`<br><span style="font-size:0.65rem;color:var(--muted);font-weight:400">${r0.cargo}</span>`:''}</td>
+      <td data-label="Turma" style="vertical-align:top">${turmasHtml}</td>
+      <td data-label="Obs" style="color:var(--muted);font-size:0.73rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top;padding-top:13px">${obsTextos||'—'}</td>
+      <td data-label="Responsável" style="font-size:0.72rem;color:var(--accent3);white-space:nowrap;vertical-align:top;padding-top:13px">${coordTextos||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="vertical-align:top;padding-top:13px">${btnDel}</td>
+    </tr>`;
+  });
+
+  c.innerHTML=`<table><thead><tr><th>Data</th><th>Tipo</th><th>Professor(a)</th><th>Turmas / Aulas / Status</th><th>Obs</th><th>Responsável</th><th></th></tr></thead><tbody>${linhas.join('')}</tbody></table>`;
+}
+
+function deletarGrupo(ids){
+  if(!confirm(`Remover estes ${ids.length} registros agrupados?`)) return;
+  registros = registros.filter(r => !ids.includes(r.id));
+  salvar(); renderHistorico(); toast(`${ids.length} registros removidos.`);
 }
 
 // STATS
