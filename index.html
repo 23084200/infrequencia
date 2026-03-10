@@ -973,8 +973,10 @@ function renderHistorico(){
 
 function deletarGrupo(ids){
   if(!confirm(`Remover estes ${ids.length} registros agrupados?`)) return;
-  registros = registros.filter(r => !ids.includes(r.id));
-  salvar(); renderHistorico(); toast(`${ids.length} registros removidos.`);
+  confirmarSenhaExclusao(()=>{
+    registros = registros.filter(r => !ids.includes(r.id));
+    salvar(); renderHistorico(); toast(`${ids.length} registros removidos.`);
+  });
 }
 
 // STATS
@@ -1182,8 +1184,20 @@ function driveDesconectar() {
   document.getElementById('btn-drive-disconnect').style.display = 'none';
   toast('Desconectado do servidor central.');
 }
-function deletar(id){if(!confirm('Remover este registro?'))return;registros=registros.filter(r=>r.id!==id);salvar();renderHistorico();toast('Registro removido.');}
-function limparTudo(){if(!confirm('Apagar TODOS os registros? Ação irreversível.'))return;registros=[];salvar();renderHistorico();toast('Todos os registros apagados.');}
+function confirmarSenhaExclusao(callback){
+  const pin=prompt('🔒 Digite a senha para confirmar a exclusão:');
+  if(pin===null)return;
+  if(pin!==PIN_ADMIN){toast('Senha incorreta. Exclusão cancelada.',true);return;}
+  callback();
+}
+function deletar(id){
+  if(!confirm('Remover este registro?'))return;
+  confirmarSenhaExclusao(()=>{registros=registros.filter(r=>r.id!==id);salvar();renderHistorico();toast('Registro removido.');});
+}
+function limparTudo(){
+  if(!confirm('Apagar TODOS os registros? Ação irreversível.'))return;
+  confirmarSenhaExclusao(()=>{registros=[];salvar();renderHistorico();toast('Todos os registros apagados.');});
+}
 function exportarCSV(){
   if(registros.length===0){toast('Nenhum dado para exportar.',true);return;}
   const h='Tipo,Data,Dia,Professor,Cargo,Turma,Turno,Aulas,Status,Observação,Registrado por\n';
