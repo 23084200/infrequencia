@@ -158,7 +158,26 @@
     #drive-bar { font-size:0.65rem; padding:5px 10px; gap:8px; flex-wrap:wrap; }
     .btn-drive { padding:3px 8px; font-size:0.62rem; }
   }
-  .registro-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:24px; }
+  /* === MULTI-TURMA === */
+  .turma-slots { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .turma-slot { background:var(--surface2); border:1.5px solid var(--border); border-radius:8px; padding:12px 14px; position:relative; transition:border-color 0.15s; }
+  .turma-slot.has-turma { border-color:var(--accent3); }
+  .turma-slot-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .turma-slot-num { font-family:'Syne',sans-serif; font-size:0.65rem; font-weight:700; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; flex:1; }
+  .btn-remove-slot { background:none; border:1px solid var(--border); color:var(--muted); border-radius:4px; padding:2px 7px; font-size:0.7rem; cursor:pointer; transition:all 0.15s; font-family:'DM Mono',monospace; }
+  .btn-remove-slot:hover { color:var(--accent2); border-color:var(--accent2); }
+  .btn-add-turma { width:100%; margin-top:8px; padding:9px; background:transparent; border:1.5px dashed var(--border); color:var(--muted); border-radius:7px; font-family:'Syne',sans-serif; font-weight:700; font-size:0.75rem; cursor:pointer; transition:all 0.15s; letter-spacing:0.04em; }
+  .btn-add-turma:hover { border-color:var(--accent3); color:var(--accent3); }
+  .slot-aulas-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-top:6px; }
+  .slot-aulas-grid-noite { grid-template-columns:repeat(4,1fr); }
+  .slot-turno-label { font-family:'Syne',sans-serif; font-size:0.6rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:4px 0 2px; }
+  .slot-aula-btn { padding:5px 2px; border-radius:5px; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); font-family:'Syne',sans-serif; font-weight:700; font-size:0.68rem; cursor:pointer; transition:all 0.12s; text-align:center; }
+  .slot-aula-btn:hover { border-color:var(--muted); color:var(--text); }
+  .slot-aula-btn.sel { border-color:var(--accent); color:var(--accent); background:#2a2409; }
+  .slot-aula-time { font-size:0.5rem; font-weight:400; color:var(--muted); display:block; margin-top:1px; }
+  .slot-aula-btn.sel .slot-aula-time { color:#b09030; }
+  .slot-dia-info { background:#1a1200; border:1px solid #3a2e00; border-radius:6px; padding:8px 10px; font-size:0.72rem; color:#c8a840; margin-top:6px; }
+  .turma-resumo { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:6px; font-size:0.7rem; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
   .card h3 { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
   label { display:block; font-size:0.68rem; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:5px; margin-top:12px; }
@@ -282,6 +301,22 @@
   #drive-bar .dot.syncing { background: var(--accent); animation: pulse 0.8s infinite; }
   #drive-bar .dot.error { background: var(--accent2); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .btn-edit { background: none; border: 1px solid var(--accent3); color: var(--accent3); border-radius: 5px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+  .btn-edit:hover { background: #1a2533; }
+  .btn-actions { display: flex; gap: 5px; align-items: center; }
+  /* Modal de Edição */
+  .modal-edit { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 520px; max-width: 96vw; max-height: 90vh; overflow-y: auto; }
+  .modal-edit h2 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; margin-bottom: 4px; color: var(--accent3); }
+  .modal-edit p { font-size: 0.75rem; color: var(--muted); margin-bottom: 18px; }
+  .modal-edit label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .modal-edit input, .modal-edit select, .modal-edit textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 7px; padding: 9px 11px; font-family: 'DM Mono', monospace; font-size: 0.83rem; }
+  .modal-edit textarea { min-height: 60px; resize: vertical; }
+  .modal-edit .edit-row { display: flex; gap: 10px; }
+  .modal-edit .edit-row > div { flex: 1; }
+  .edit-aulas-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .edit-aula-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 5px; padding: 5px 10px; font-size: 0.72rem; cursor: pointer; transition: all 0.12s; font-family: 'DM Mono', monospace; }
+  .edit-aula-btn.sel { background: #1a1200; border-color: var(--accent); color: var(--accent); }
+  .edit-warn { background: #1a1000; border: 1px solid #5a3d00; border-radius: 7px; padding: 10px 14px; font-size: 0.73rem; color: #c8a840; margin-bottom: 12px; display: none; }
   .btn-drive { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 5px; padding: 3px 10px; font-size: 0.68rem; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.15s; white-space: nowrap; }
   .btn-drive:hover { color: var(--text); border-color: var(--muted); }
   .btn-drive.primary { border-color: var(--accent3); color: var(--accent3); }
@@ -342,6 +377,63 @@
   </div>
 </div>
 
+<!-- MODAL EDIÇÃO DE FALTA -->
+<div class="modal-overlay" id="modal-edicao">
+  <div class="modal-edit">
+    <h2>✏️ Editar Falta</h2>
+    <p>Modifique os dados do registro e confirme com o PIN da coordenação.</p>
+    <div id="edit-warn-rec" class="edit-warn">⚠ Esta falta já foi recuperada. Você pode editar os dados, mas a vinculação com a recuperação será mantida.</div>
+    <input type="hidden" id="edit-id" />
+    <div class="edit-row">
+      <div>
+        <label>Data</label>
+        <input type="date" id="edit-data" oninput="autoPreencherDia(this.value,'edit-dia')" />
+      </div>
+      <div>
+        <label>Dia da semana</label>
+        <input type="text" id="edit-dia" placeholder="Ex: 2ª FEIRA" readonly style="color:var(--muted)" />
+      </div>
+    </div>
+    <label>Professor(a)</label>
+    <input type="text" id="edit-prof" list="lista-edit-p" autocomplete="off" />
+    <datalist id="lista-edit-p"></datalist>
+    <label>Cargo / Disciplina (opcional)</label>
+    <input type="text" id="edit-cargo" placeholder="Ex: Coordenador, Professor de Matemática..." />
+    <label>Turma</label>
+    <select id="edit-turma" onchange="atualizarAulasEdicao()"></select>
+    <label>Turno</label>
+    <select id="edit-turno" onchange="atualizarAulasEdicao()">
+      <option value="manha">Manhã</option>
+      <option value="tarde">Tarde</option>
+      <option value="noite">Noite</option>
+    </select>
+    <div id="edit-tipo-display" style="margin-top:14px;font-size:0.72rem;color:var(--muted)">MODALIDADE</div>
+    <div id="edit-aulas-section" style="display:none;margin-top:6px">
+      <label>Aulas ausentes</label>
+      <div class="edit-aulas-grid" id="edit-aulas-grid"></div>
+    </div>
+    <div id="edit-dia-section" style="display:none;margin-top:8px">
+      <div style="background:#1a1200;border:1px solid #3a2e00;border-radius:8px;padding:10px 14px;font-size:0.78rem;color:#c8a840">📅 Falta do dia inteiro — sem aulas específicas.</div>
+    </div>
+    <label>Observação (opcional)</label>
+    <textarea id="edit-obs" placeholder="Detalhes..."></textarea>
+    <label>Coordenador(a) responsável</label>
+    <select id="edit-coord">
+      <option value="">— selecione —</option>
+      <option>ELDER</option>
+      <option>FLÁVIA</option>
+      <option>IVANILSON</option>
+      <option>NAILA</option>
+      <option>NAIARA</option>
+      <option>QUEIROZ</option>
+    </select>
+    <div class="modal-btns" style="margin-top:20px">
+      <button class="btn-cancel" onclick="fecharEdicao()">Cancelar</button>
+      <button class="btn-confirm" style="background:var(--accent3)" onclick="salvarEdicao()">✓ Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
 <!-- APP ADMIN -->
 <div id="app">
   <header>
@@ -385,8 +477,6 @@
             <div style="font-size:0.65rem;color:var(--green);margin-top:4px">✦ Nomes novos são salvos automaticamente na lista</div>
             <label>Cargo / Função <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
             <input type="text" id="cargo" placeholder="Ex: Prof. de Apoio, Coordenador, Inspetor..." />
-            <label>Turma <span style="font-weight:400;color:var(--muted)">(opcional — deixe em branco se não se aplica)</span></label>
-            <select id="turma"><option value="">— sem turma específica —</option></select>
             <label>Observação (opcional)</label>
             <textarea id="obs" placeholder="Motivo, substituto, atestado..."></textarea>
             <label>Responsável pelo Registro <span style="color:var(--accent2)">*</span></label>
@@ -418,24 +508,11 @@
             </div>
           </div>
 
-          <!-- Bloco só aparece no modo AULAS -->
-          <div class="card" id="card-aulas-f" style="margin-top:14px;display:none">
-            <h3>Aulas Ausentes</h3>
-            <p style="font-size:0.68rem;color:var(--muted);margin-bottom:12px">Selecione as aulas em que houve ausência (qualquer turno)</p>
-            <div class="turno-label manha-label">☀️ MANHÃ</div>
-            <div class="aulas-grid" id="ag-f-manha"></div>
-            <div class="turno-label tarde-label" style="margin-top:10px">🌤 TARDE</div>
-            <div class="aulas-grid" id="ag-f-tarde"></div>
-            <div class="turno-label noite-label" style="margin-top:10px">🌙 NOITE</div>
-            <div class="aulas-grid aulas-grid-noite" id="ag-f-noite"></div>
-            <div id="ag-f-contador" style="font-size:0.7rem;color:var(--muted);margin-top:10px;text-align:right"></div>
-          </div>
-
-          <!-- Confirmação modo DIA -->
-          <div id="card-dia-f" style="margin-top:14px">
-            <div style="background:#1a1200;border:1px solid #3a2e00;border-radius:8px;padding:14px 16px;font-size:0.8rem;color:#c8a840">
-              📅 A falta será registrada como <strong>ausência do dia</strong>, sem vínculo com aulas específicas.
-            </div>
+          <div class="card" style="margin-top:14px">
+            <h3>Turmas e Horários</h3>
+            <p style="font-size:0.68rem;color:var(--muted);margin-bottom:10px">Adicione uma ou mais turmas. Cada turma pode ter aulas diferentes.</p>
+            <div class="turma-slots" id="turma-slots-container"></div>
+            <button class="btn-add-turma" onclick="adicionarSlotTurma()">+ Adicionar turma</button>
           </div>
 
           <button class="btn-registrar" onclick="registrarFalta()">✕ REGISTRAR FALTA</button>
@@ -625,38 +702,17 @@ function init(){
   // Expose globally
   window.atualizarDatalistProfs=atualizarDatalistProfs;
   atualizarDatalistProfs();
-  // Popula selects de turma com grupos visuais
-  function popularTurmaSelect(id){
-    const s=document.getElementById(id);
-    s.innerHTML='<option value="">— selecione a turma —</option>';
-    const grupos=[
-      {label:'☀️🌤 INTEGRAL (Manhã e Tarde)',filter:t=>t.turnos.includes('manha')&&t.turnos.includes('tarde')},
-      {label:'☀️ SÓ MANHÃ',filter:t=>t.turnos.length===1&&t.turnos[0]==='manha'},
-      {label:'🌤 SÓ TARDE',filter:t=>t.turnos.length===1&&t.turnos[0]==='tarde'},
-      {label:'🌙 SÓ NOITE',filter:t=>t.turnos.length===1&&t.turnos[0]==='noite'},
-      {label:'📋 PLANEJAMENTO',filter:t=>t.turnos.includes('planejamento')},
-    ];
-    grupos.forEach(g=>{
-      const lista=TURMAS_CONFIG.filter(g.filter);
-      if(!lista.length)return;
-      const og=document.createElement('optgroup');og.label=g.label;
-      lista.forEach(t=>{const o=document.createElement('option');o.value=t.cod;o.text=t.nome;og.appendChild(o);});
-      s.appendChild(og);
-    });
-  }
-  popularTurmaSelect('turma');
-  popularTurmaSelect('rec-turma');
-  // Auto-selecionar turno ao escolher turma
-  document.getElementById('turma').addEventListener('change',()=>aoSelecionarTurma('turma','f'));
+  // Popula select de recuperação com grupos visuais
+  popularTurmaSelectEl(document.getElementById('rec-turma'));
   document.getElementById('rec-turma').addEventListener('change',()=>aoSelecionarTurma('rec-turma','r'));
   // Popula filtro de turma no histórico
   const ftuSel=document.getElementById('ftu');
   TURMAS_CONFIG.forEach(t=>{const o=document.createElement('option');o.value=t.cod;o.text=t.nome;ftuSel.appendChild(o);});
-  // Renderiza todas as aulas disponíveis
-  renderTodasAulas('f');
+  // Renderiza aulas de recuperação
   renderTodasAulas('r');
-  // Inicializa tipo de falta como "dia inteiro"
-  setTimeout(()=>{ setTipoFalta('dia'); }, 50);
+  // Inicializa com 1 slot de turma
+  tipoFalta='dia';
+  adicionarSlotTurma();
   setInterval(()=>{
     document.getElementById('clock').textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   },1000);
@@ -700,12 +756,29 @@ function autoPreencherDia(dataVal, diaSelectId){
   if(!nomeDia&&dataVal) toast('⚠ Sábado ou domingo selecionado!',true);
 }
 
-// AUTO-TURNO ao selecionar turma (apenas habilita/desabilita visualmente — aulas já ficam todas visíveis)
+// HELPER: popular select de turma com grupos
+function popularTurmaSelectEl(s){
+  s.innerHTML='<option value="">— sem turma específica —</option>';
+  const grupos=[
+    {label:'☀️🌤 INTEGRAL (Manhã e Tarde)',filter:t=>t.turnos.includes('manha')&&t.turnos.includes('tarde')},
+    {label:'☀️ SÓ MANHÃ',filter:t=>t.turnos.length===1&&t.turnos[0]==='manha'},
+    {label:'🌤 SÓ TARDE',filter:t=>t.turnos.length===1&&t.turnos[0]==='tarde'},
+    {label:'🌙 SÓ NOITE',filter:t=>t.turnos.length===1&&t.turnos[0]==='noite'},
+    {label:'📋 PLANEJAMENTO',filter:t=>t.turnos.includes('planejamento')},
+  ];
+  grupos.forEach(g=>{
+    const lista=TURMAS_CONFIG.filter(g.filter);
+    if(!lista.length)return;
+    const og=document.createElement('optgroup');og.label=g.label;
+    lista.forEach(t=>{const o=document.createElement('option');o.value=t.cod;o.text=t.nome;og.appendChild(o);});
+    s.appendChild(og);
+  });
+}
+
+// AUTO-TURNO ao selecionar turma (recuperação)
 function aoSelecionarTurma(selectId, modo){
   const cod=document.getElementById(selectId).value;
-  if(!cod){ // sem turma = tudo habilitado
-    renderTodasAulas(modo); return;
-  }
+  if(!cod){ renderTodasAulas(modo); return; }
   const cfg=TURMA_MAP[cod];
   if(!cfg) return;
   if(cfg.turnos.length>1) toast('ℹ Turma integral: pode registrar falta em Manhã e/ou Tarde.',false);
@@ -714,22 +787,111 @@ function atualizarBotoesTurno(){} // mantido para compatibilidade
 
 let tipoFalta = 'dia'; // 'dia' ou 'aulas'
 
-// TIPO DE FALTA — simples: dia não tem aulas, aulas mostra a grade
+// === SISTEMA MULTI-TURMA ===
+let slotCounter = 0;
+// slotAulas[slotId] = Set de códigos de aula selecionados
+const slotAulas = {};
+
 function setTipoFalta(tipo){
   tipoFalta = tipo;
   document.getElementById('btn-tipo-dia').classList.toggle('active', tipo==='dia');
   document.getElementById('btn-tipo-aula').classList.toggle('active', tipo==='aulas');
-  document.getElementById('card-aulas-f').style.display = tipo==='aulas' ? 'block' : 'none';
-  document.getElementById('card-dia-f').style.display   = tipo==='dia'   ? 'block' : 'none';
-  aulasF.clear();
-  if(tipo==='aulas') renderTodasAulas('f');
+  // Re-renderizar todos os slots existentes
+  const slots = document.querySelectorAll('.turma-slot');
+  slots.forEach(slot => {
+    const sid = slot.dataset.slotId;
+    renderSlotAulas(sid);
+  });
 }
+
+function adicionarSlotTurma(){
+  const sid = ++slotCounter;
+  slotAulas[sid] = new Set();
+  const container = document.getElementById('turma-slots-container');
+  const div = document.createElement('div');
+  div.className = 'turma-slot';
+  div.dataset.slotId = sid;
+  div.id = `slot-${sid}`;
+  div.innerHTML = `
+    <div class="turma-slot-header">
+      <span class="turma-slot-num">Turma ${sid}</span>
+      <button class="btn-remove-slot" onclick="removerSlotTurma(${sid})" title="Remover esta turma">✕ Remover</button>
+    </div>
+    <select id="slot-turma-${sid}" onchange="aoMudarTurmaSlot(${sid})">
+    </select>
+    <div id="slot-aulas-${sid}" style="margin-top:8px"></div>
+  `;
+  container.appendChild(div);
+  // Popular select
+  popularTurmaSelectEl(document.getElementById(`slot-turma-${sid}`));
+  renderSlotAulas(sid);
+}
+
+function removerSlotTurma(sid){
+  const container = document.getElementById('turma-slots-container');
+  const slots = container.querySelectorAll('.turma-slot');
+  if(slots.length <= 1){ toast('⚠ É necessário ao menos uma turma.', true); return; }
+  const el = document.getElementById(`slot-${sid}`);
+  if(el) el.remove();
+  delete slotAulas[sid];
+  // Renumerar labels
+  container.querySelectorAll('.turma-slot').forEach((s, i) => {
+    s.querySelector('.turma-slot-num').textContent = `Turma ${i+1}`;
+  });
+}
+
+function aoMudarTurmaSlot(sid){
+  const sel = document.getElementById(`slot-turma-${sid}`);
+  const slot = document.getElementById(`slot-${sid}`);
+  if(sel && sel.value) slot.classList.add('has-turma');
+  else slot.classList.remove('has-turma');
+  slotAulas[sid] = new Set();
+  renderSlotAulas(sid);
+}
+
+function toggleSlotAula(sid, cod){
+  if(!slotAulas[sid]) slotAulas[sid] = new Set();
+  if(slotAulas[sid].has(cod)) slotAulas[sid].delete(cod);
+  else slotAulas[sid].add(cod);
+  renderSlotAulas(sid);
+}
+
+function renderSlotAulas(sid){
+  const container = document.getElementById(`slot-aulas-${sid}`);
+  if(!container) return;
+  if(tipoFalta === 'dia'){
+    container.innerHTML = `<div class="slot-dia-info">📅 Falta do dia inteiro — sem aulas específicas.</div>`;
+    return;
+  }
+  const sel = slotAulas[sid] || new Set();
+  const ord = ['M1','M2','M3','M4','M5','T1','T2','T3','T4','T5','N1','N2','N3','N4'];
+  const lista = [...sel].sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
+  const resumo = lista.length>0
+    ? `<span style="color:var(--accent);font-weight:600;font-size:0.7rem">${lista.length} aula${lista.length>1?'s':''}: ${lista.join(', ')}</span>`
+    : `<span style="color:var(--muted);font-size:0.7rem">Nenhuma aula selecionada</span>`;
+
+  const renderTurno = (turno, label, emoji, labelClass, gridClass='slot-aulas-grid') =>
+    `<div class="slot-turno-label ${labelClass}">${emoji} ${label}</div>
+    <div class="${gridClass}">
+      ${AULAS[turno].map(a=>`<button type="button" class="slot-aula-btn ${sel.has(a.cod)?'sel':''}" onclick="toggleSlotAula(${sid},'${a.cod}')" title="${a.hora}">${a.cod}<span class="slot-aula-time">${a.hora}</span></button>`).join('')}
+    </div>`;
+
+  container.innerHTML = `
+    ${renderTurno('manha','MANHÃ','☀️','manha-label')}
+    ${renderTurno('tarde','TARDE','🌤','tarde-label')}
+    ${renderTurno('noite','NOITE','🌙','noite-label','slot-aulas-grid slot-aulas-grid-noite')}
+    <div class="turma-resumo" style="margin-top:8px">${resumo}</div>
+  `;
+}
+
+// Manter renderTodasAulas para recuperação (usa os ids ag-r-*)
 function renderTodasAulas(modo){
   const sel = modo==='f' ? aulasF : aulasR;
   const cls = modo==='f' ? 'sel-f' : 'sel-r';
   const corMap = {manha:'var(--manha)', tarde:'var(--tarde)', noite:'var(--noite)'};
   ['manha','tarde','noite'].forEach(turno=>{
     const g = document.getElementById(`ag-${modo}-${turno}`);
+    if(!g) return;
     g.innerHTML = '';
     AULAS[turno].forEach(a=>{
       const b = document.createElement('button');
@@ -752,7 +914,6 @@ function renderTodasAulas(modo){
         }
         atualizarContador(modo);
       };
-      // Aplicar cor já selecionada
       if(sel.has(a.cod)){
         if(turno==='tarde'){ b.style.color='var(--tarde)'; b.style.background='#2b1e0e'; b.style.borderColor='var(--tarde)'; }
         if(turno==='noite'){ b.style.color='var(--noite)'; b.style.background='#1e1628'; b.style.borderColor='var(--noite)'; }
@@ -774,42 +935,75 @@ function atualizarContador(modo){
   el.innerHTML = `<span style="color:var(--text)">${sel.size} aula${sel.size>1?'s':''} selecionada${sel.size>1?'s':''}: </span><span style="color:var(--accent);font-weight:600">${lista.join(', ')}</span>`;
 }
 
-// REGISTRAR FALTA
+// REGISTRAR FALTA — suporta múltiplas turmas
 function registrarFalta(){
   const data=document.getElementById('data').value;
   const dia=document.getElementById('dia').value;
   const professor=document.getElementById('professor').value.trim().toUpperCase();
   const cargo=document.getElementById('cargo').value.trim();
-  const turma=document.getElementById('turma').value;
   const obs=document.getElementById('obs').value.trim();
   const coordenador=document.getElementById('coordenador').value;
   if(!data||!dia||!professor){toast('⚠ Preencha: data, dia da semana e nome do professor.',true);return;}
-  if(tipoFalta==='aulas' && aulasF.size===0){toast('⚠ Selecione ao menos uma aula.',true);return;}
   if(!coordenador){toast('⚠ Selecione o responsável pelo registro.',true);return;}
 
+  // Coletar dados dos slots de turma
+  const slots = document.querySelectorAll('.turma-slot');
+  if(slots.length===0){toast('⚠ Adicione ao menos uma turma.',true);return;}
+
   const ord=['M1','M2','M3','M4','M5','T1','T2','T3','T4','T5','N1','N2','N3','N4'];
-  const aulasOrdenadas = tipoFalta==='aulas'
-    ? [...aulasF].sort((a,b)=>ord.indexOf(a)-ord.indexOf(b))
-    : [];
 
-  // ── Verificar duplicidade ──────────────────────────────────
-  const duplicado = registros.find(r => {
-    if(r.tipo !== 'falta') return false;
-    if(r.professor !== professor) return false;
-    if(r.data !== data) return false;
-    if(r.turma !== turma) return false;
-    // Falta do dia inteiro conflita com qualquer outra falta no mesmo dia/turma
-    if(r.modalidade === 'DIA' || tipoFalta === 'dia') return true;
-    // Falta por aulas: checar se há aulas em comum
-    return r.aulas.some(a => aulasOrdenadas.includes(a));
-  });
-
-  if(duplicado){
-    const aulasConflito = duplicado.modalidade==='DIA' ? 'dia inteiro' : duplicado.aulas.join(', ');
-    toast(`⚠ Já existe falta de ${professor}${turma?' na turma '+turma:''} em ${data} (${aulasConflito}).`, true);
-    return;
+  // Construir lista de entradas por turma
+  const entradas = [];
+  for(const slot of slots){
+    const sid = slot.dataset.slotId;
+    const turma = document.getElementById(`slot-turma-${sid}`)?.value || '';
+    const aulasSet = slotAulas[sid] || new Set();
+    const aulasOrdenadas = tipoFalta==='aulas'
+      ? [...aulasSet].sort((a,b)=>ord.indexOf(a)-ord.indexOf(b))
+      : [];
+    if(tipoFalta==='aulas' && aulasOrdenadas.length===0){
+      const turmaLabel = turma ? (TURMA_MAP[turma]?.nome || turma) : `Turma ${entradas.length+1}`;
+      toast(`⚠ Selecione ao menos uma aula para ${turmaLabel}.`,true);
+      return;
+    }
+    entradas.push({turma, aulasOrdenadas});
   }
-  // ──────────────────────────────────────────────────────────
+
+  // Verificar duplicidades para cada entrada
+  const grupoId = Date.now(); // ID de grupo para agrupar registros do mesmo envio
+  let algumRegistrado = 0;
+  let algumDuplicado = 0;
+
+  for(const entrada of entradas){
+    const {turma, aulasOrdenadas} = entrada;
+    const duplicado = registros.find(r => {
+      if(r.tipo !== 'falta') return false;
+      if(r.professor !== professor) return false;
+      if(r.data !== data) return false;
+      if(r.turma !== turma) return false;
+      if(r.modalidade === 'DIA' || tipoFalta === 'dia') return true;
+      return r.aulas.some(a => aulasOrdenadas.includes(a));
+    });
+    if(duplicado){
+      const aulasConflito = duplicado.modalidade==='DIA' ? 'dia inteiro' : duplicado.aulas.join(', ');
+      const turmaLabel = turma ? (TURMA_MAP[turma]?.nome || turma) : 'sem turma';
+      toast(`⚠ Já existe falta de ${professor} em ${turmaLabel} (${aulasConflito}).`, true);
+      algumDuplicado++;
+      continue;
+    }
+    const turno = tipoFalta==='aulas' ? derTurno(aulasOrdenadas) : '';
+    registros.unshift({
+      id: grupoId + algumRegistrado, tipo:'falta',
+      modalidade: tipoFalta==='dia'?'DIA':'AULAS',
+      data, dia, professor, cargo, turma, turno,
+      aulas: aulasOrdenadas, obs, coordenador,
+      recuperada:false, recuperacaoId:null,
+      criadoEm:new Date().toISOString()
+    });
+    algumRegistrado++;
+  }
+
+  if(algumRegistrado===0) return;
 
   // Salvar novo nome se necessário
   if(professor && !PROFS.includes(professor)){
@@ -819,26 +1013,24 @@ function registrarFalta(){
     atualizarDatalistProfs();
   }
 
-  const turno = tipoFalta==='aulas' ? derTurno(aulasOrdenadas) : '';
-
-  registros.unshift({
-    id:Date.now(), tipo:'falta', modalidade: tipoFalta==='dia'?'DIA':'AULAS',
-    data, dia, professor, cargo, turma, turno,
-    aulas: aulasOrdenadas, obs, coordenador,
-    recuperada:false, recuperacaoId:null, criadoEm:new Date().toISOString()
-  });
   salvar();
-  toast(tipoFalta==='dia'
-    ? `📅 Falta do dia de ${professor} registrada!`
-    : `🕐 Falta de aulas de ${professor} registrada! (${aulasOrdenadas.join(', ')})`);
+  const msg = algumRegistrado===1
+    ? (tipoFalta==='dia'
+        ? `📅 Falta do dia de ${professor} registrada!`
+        : `🕐 Falta de aulas de ${professor} registrada!`)
+    : `✕ ${algumRegistrado} registros de falta de ${professor} registrados!`;
+  toast(algumDuplicado>0 ? msg + ` (${algumDuplicado} duplicado${algumDuplicado>1?'s':''} ignorado${algumDuplicado>1?'s':''})` : msg);
 
-  aulasF.clear();
-  setTipoFalta('dia');
+  // Limpar formulário
   document.getElementById('obs').value='';
   document.getElementById('cargo').value='';
-  document.getElementById('turma').value='';
   document.getElementById('professor').value='';
   document.getElementById('coordenador').value='';
+  // Resetar slots
+  Object.keys(slotAulas).forEach(k=>delete slotAulas[k]);
+  slotCounter=0;
+  document.getElementById('turma-slots-container').innerHTML='';
+  adicionarSlotTurma();
 }
 // Deriva o turno "principal" de uma lista de códigos de aula
 function derTurno(aulas){
@@ -957,6 +1149,11 @@ function renderHistorico(){
       ? `<button class="btn-del" onclick="deletar(${ids[0]})">✕</button>`
       : `<button class="btn-del" style="font-size:0.62rem" onclick="deletarGrupo([${ids.join(',')}])" title="Remover todos os ${ids.length} registros deste grupo">✕ ${ids.length}</button>`;
 
+    // Botão editar: só para falta única (não agrupada, não recuperação)
+    const btnEdit = (ids.length === 1 && r0.tipo === 'falta')
+      ? `<button class="btn-edit" onclick="abrirEdicao(${ids[0]})" title="Editar este registro">✎</button>`
+      : '';
+
     return `<tr>
       <td data-label="Data" style="white-space:nowrap;vertical-align:top;padding-top:13px">${formatData(r0.data)}${r0.dia?`<br><span style="font-size:0.65rem;color:var(--muted)">${r0.dia}</span>`:''}</td>
       <td data-label="Tipo" style="vertical-align:top;padding-top:13px">${tipoHtml}</td>
@@ -964,7 +1161,7 @@ function renderHistorico(){
       <td data-label="Turma" style="vertical-align:top">${turmasHtml}</td>
       <td data-label="Obs" style="color:var(--muted);font-size:0.73rem;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top;padding-top:13px">${obsTextos||'—'}</td>
       <td data-label="Responsável" style="font-size:0.72rem;color:var(--accent3);white-space:nowrap;vertical-align:top;padding-top:13px">${coordTextos||'<span style="color:var(--muted)">—</span>'}</td>
-      <td style="vertical-align:top;padding-top:13px">${btnDel}</td>
+      <td style="vertical-align:top;padding-top:13px"><div class="btn-actions">${btnEdit}${btnDel}</div></td>
     </tr>`;
   });
 
@@ -976,6 +1173,143 @@ function deletarGrupo(ids){
   confirmarSenhaExclusao(()=>{
     registros = registros.filter(r => !ids.includes(r.id));
     salvar(); renderHistorico(); toast(`${ids.length} registros removidos.`);
+  });
+}
+
+// EDIÇÃO DE FALTA
+let editAulasSet = new Set();
+
+function abrirEdicao(id) {
+  const r = registros.find(x => x.id === id);
+  if (!r || r.tipo !== 'falta') return;
+
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-data').value = r.data || '';
+  document.getElementById('edit-dia').value = r.dia || '';
+  document.getElementById('edit-prof').value = r.professor || '';
+  document.getElementById('edit-cargo').value = r.cargo || '';
+  document.getElementById('edit-obs').value = r.obs || '';
+  document.getElementById('edit-coord').value = r.coordenador || '';
+
+  // Popular datalist de professores no modal edição
+  const dl = document.getElementById('lista-edit-p');
+  dl.innerHTML = '';
+  PROFS.forEach(p => { const o = document.createElement('option'); o.value = p; dl.appendChild(o); });
+
+  // Popular select de turma
+  const st = document.getElementById('edit-turma');
+  st.innerHTML = '<option value="">— selecione a turma —</option>';
+  const grupos = [
+    {label:'☀️🌤 INTEGRAL (Manhã e Tarde)',filter:t=>t.turnos.includes('manha')&&t.turnos.includes('tarde')},
+    {label:'☀️ SÓ MANHÃ',filter:t=>t.turnos.length===1&&t.turnos[0]==='manha'},
+    {label:'🌤 SÓ TARDE',filter:t=>t.turnos.length===1&&t.turnos[0]==='tarde'},
+    {label:'🌙 SÓ NOITE',filter:t=>t.turnos.length===1&&t.turnos[0]==='noite'},
+    {label:'📋 PLANEJAMENTO',filter:t=>t.turnos.includes('planejamento')},
+  ];
+  grupos.forEach(g => {
+    const lista = TURMAS_CONFIG.filter(g.filter);
+    if (!lista.length) return;
+    const og = document.createElement('optgroup'); og.label = g.label;
+    lista.forEach(t => { const o = document.createElement('option'); o.value = t.cod; o.text = t.nome; og.appendChild(o); });
+    st.appendChild(og);
+  });
+  st.value = r.turma || '';
+  document.getElementById('edit-turno').value = r.turno || 'manha';
+
+  // Aulas
+  editAulasSet = new Set(r.aulas || []);
+  atualizarAulasEdicao();
+
+  // Aviso se já recuperada
+  document.getElementById('edit-warn-rec').style.display = r.recuperada ? 'block' : 'none';
+
+  document.getElementById('modal-edicao').classList.add('show');
+}
+
+function fecharEdicao() {
+  document.getElementById('modal-edicao').classList.remove('show');
+}
+
+function atualizarAulasEdicao() {
+  const turno = document.getElementById('edit-turno').value;
+  const modalidade = editAulasSet.size > 0 ? 'AULAS' : 'DIA';
+  // Detecta modalidade do registro original para mostrar seção correta
+  const id = parseInt(document.getElementById('edit-id').value);
+  const r = registros.find(x => x.id === id);
+  const mod = r ? r.modalidade : (editAulasSet.size > 0 ? 'AULAS' : 'DIA');
+
+  const secAulas = document.getElementById('edit-aulas-section');
+  const secDia = document.getElementById('edit-dia-section');
+  const tipoDisp = document.getElementById('edit-tipo-display');
+
+  if (mod === 'AULAS') {
+    secAulas.style.display = 'block';
+    secDia.style.display = 'none';
+    tipoDisp.textContent = '🕐 MODALIDADE: FALTA DE AULAS';
+    // Renderizar botões de aula para o turno selecionado
+    const grid = document.getElementById('edit-aulas-grid');
+    const lista = AULAS[turno] || [];
+    grid.innerHTML = lista.map(a =>
+      `<button type="button" class="edit-aula-btn ${editAulasSet.has(a.cod)?'sel':''}" onclick="toggleEditAula('${a.cod}')" title="${a.hora}">${a.cod}</button>`
+    ).join('');
+  } else {
+    secAulas.style.display = 'none';
+    secDia.style.display = 'block';
+    tipoDisp.textContent = '📅 MODALIDADE: FALTA DO DIA';
+  }
+}
+
+function toggleEditAula(cod) {
+  if (editAulasSet.has(cod)) editAulasSet.delete(cod);
+  else editAulasSet.add(cod);
+  atualizarAulasEdicao();
+}
+
+function salvarEdicao() {
+  const id = parseInt(document.getElementById('edit-id').value);
+  const r = registros.find(x => x.id === id);
+  if (!r) return;
+
+  const novaData = document.getElementById('edit-data').value.trim();
+  const novaDia = document.getElementById('edit-dia').value.trim();
+  const novoProf = document.getElementById('edit-prof').value.trim().toUpperCase();
+  const novoCargo = document.getElementById('edit-cargo').value.trim();
+  const novaTurma = document.getElementById('edit-turma').value;
+  const novoTurno = document.getElementById('edit-turno').value;
+  const novaObs = document.getElementById('edit-obs').value.trim();
+  const novoCoord = document.getElementById('edit-coord').value;
+
+  if (!novaData || !novoProf || !novaTurma || !novoTurno) {
+    toast('Preencha data, professor, turma e turno.', true); return;
+  }
+
+  // Verificar se aulas foram alteradas (para modalidade AULAS)
+  const novasAulas = r.modalidade === 'AULAS'
+    ? [...AULAS.manha, ...AULAS.tarde, ...AULAS.noite]
+        .filter(a => editAulasSet.has(a.cod))
+        .map(a => a.cod)
+    : [];
+
+  if (r.modalidade === 'AULAS' && novasAulas.length === 0) {
+    toast('Selecione ao menos uma aula.', true); return;
+  }
+
+  // Confirmar com PIN antes de salvar
+  confirmarSenhaExclusao(() => {
+    r.data = novaData;
+    r.dia = novaDia;
+    r.professor = novoProf;
+    r.cargo = novoCargo;
+    r.turma = novaTurma;
+    r.turno = novoTurno;
+    r.obs = novaObs;
+    r.coordenador = novoCoord;
+    if (r.modalidade === 'AULAS') r.aulas = novasAulas;
+
+    salvar();
+    renderHistorico();
+    fecharEdicao();
+    toast('Registro atualizado com sucesso!');
   });
 }
 
