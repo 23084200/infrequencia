@@ -177,6 +177,7 @@
   .slot-aula-time { font-size:0.5rem; font-weight:400; color:var(--muted); display:block; margin-top:1px; }
   .slot-aula-btn.sel .slot-aula-time { color:#b09030; }
   .slot-dia-info { background:#1a1200; border:1px solid #3a2e00; border-radius:6px; padding:8px 10px; font-size:0.72rem; color:#c8a840; margin-top:6px; }
+
   .turma-resumo { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:6px; font-size:0.7rem; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
   .card h3 { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
@@ -843,8 +844,15 @@ function removerSlotTurma(sid){
 function aoMudarTurmaSlot(sid){
   const sel = document.getElementById(`slot-turma-${sid}`);
   const slot = document.getElementById(`slot-${sid}`);
-  if(sel && sel.value) slot.classList.add('has-turma');
-  else slot.classList.remove('has-turma');
+  if(sel && sel.value){
+    slot.classList.add('has-turma');
+    // Ao acionar uma turma, muda automaticamente para FALTA DE AULAS
+    if(tipoFalta !== 'aulas'){
+      setTipoFalta('aulas');
+    }
+  } else {
+    slot.classList.remove('has-turma');
+  }
   slotAulas[sid] = new Set();
   renderSlotAulas(sid);
 }
@@ -859,6 +867,10 @@ function toggleSlotAula(sid, cod){
 function renderSlotAulas(sid){
   const container = document.getElementById(`slot-aulas-${sid}`);
   if(!container) return;
+
+  const turmaEl = document.getElementById(`slot-turma-${sid}`);
+  const temTurma = turmaEl && turmaEl.value;
+
   if(tipoFalta === 'dia'){
     container.innerHTML = `<div class="slot-dia-info">📅 Falta do dia inteiro — sem aulas específicas.</div>`;
     return;
