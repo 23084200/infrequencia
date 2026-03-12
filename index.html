@@ -177,7 +177,6 @@
   .slot-aula-time { font-size:0.5rem; font-weight:400; color:var(--muted); display:block; margin-top:1px; }
   .slot-aula-btn.sel .slot-aula-time { color:#b09030; }
   .slot-dia-info { background:#1a1200; border:1px solid #3a2e00; border-radius:6px; padding:8px 10px; font-size:0.72rem; color:#c8a840; margin-top:6px; }
-
   .turma-resumo { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:6px; font-size:0.7rem; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
   .card h3 { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
@@ -282,7 +281,36 @@
   .rec-badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:0.65rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; }
   .rec-badge.pendente { background:#2a1a0a; color:#f0a040; border:1px solid #4a3010; }
   .rec-badge.recuperada { background:#0e2416; color:var(--green); border:1px solid #1a5030; }
+  .rec-badge.justificada { background:#0e1a2e; color:var(--accent3); border:1px solid #1a3a5a; }
   .rec-detail { font-size:0.68rem; color:var(--muted); margin-top:4px; }
+
+  /* Seletor de protocolo de recuperação */
+  .protocolo-btns { display:flex; gap:10px; margin-bottom:4px; }
+  .protocolo-btn {
+    flex:1; padding:14px 10px; border-radius:8px; border:2px solid var(--border);
+    background:var(--surface2); color:var(--muted); cursor:pointer;
+    transition:all 0.18s; text-align:center; display:flex; flex-direction:column; gap:4px;
+  }
+  .protocolo-btn:hover { border-color:var(--muted); color:var(--text); }
+  .protocolo-btn .p-icon { font-size:1.4rem; }
+  .protocolo-btn .p-titulo { font-family:'Syne',sans-serif; font-weight:800; font-size:0.72rem; letter-spacing:0.06em; }
+  .protocolo-btn .p-sub { font-size:0.62rem; color:var(--muted); line-height:1.4; }
+  .protocolo-btn.rec-btn.active { border-color:var(--green); background:#0e2416; color:var(--green); }
+  .protocolo-btn.rec-btn.active .p-sub { color:#2a7040; }
+  .protocolo-btn.abono-btn.active { border-color:var(--accent3); background:#0e1a2e; color:var(--accent3); }
+  .protocolo-btn.abono-btn.active .p-sub { color:#2a5070; }
+  .abono-info { background:#0e1a2e; border:1px solid #1a3a5a; border-radius:8px; padding:12px 14px; font-size:0.73rem; color:var(--accent3); margin-top:8px; display:none; line-height:1.6; }
+  .abono-info strong { color:#7dd0f0; }
+  .abono-result { background:#0a1e10; border:1px solid #1a5030; border-radius:8px; padding:12px 14px; font-size:0.73rem; color:var(--green); margin-top:10px; display:none; }
+  .abono-result .ab-title { font-family:'Syne',sans-serif; font-weight:700; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:6px; }
+  .abono-falta-item { padding:3px 0; font-size:0.72rem; color:#a0e0b0; }
+  @media (max-width:700px) {
+    .protocolo-btns { flex-direction:column; gap:8px; }
+    .protocolo-btn { flex-direction:row; padding:12px 14px; gap:12px; text-align:left; align-items:center; }
+    .protocolo-btn .p-icon { font-size:1.6rem; }
+    .protocolo-btn .p-titulo { font-size:0.78rem; }
+    .protocolo-btn .p-sub { font-size:0.66rem; }
+  }
 
   .toast { position:fixed; bottom:24px; right:24px; background:var(--accent); color:#0e0f14; padding:11px 20px; border-radius:8px; font-family:'Syne',sans-serif; font-weight:700; font-size:0.82rem; z-index:999; opacity:0; transform:translateY(10px); transition:all 0.25s; pointer-events:none; }
   .toast.show { opacity:1; transform:translateY(0); }
@@ -524,21 +552,49 @@
     <!-- REGISTRAR RECUPERAÇÃO -->
     <div id="page-recuperacao" class="page">
       <div class="registro-grid">
+        <!-- COLUNA ESQUERDA: protocolo + dados -->
         <div>
           <div class="card">
-            <h3>Dados da Recuperação</h3>
+            <h3>Protocolo de Justificativa</h3>
+            <div class="protocolo-btns" style="margin-top:10px">
+              <button class="protocolo-btn rec-btn active" id="btn-proto-rec" onclick="setProtocolo('recuperacao')">
+                <span class="p-icon">📚</span>
+                <span class="p-titulo">RECUPERAÇÃO DE AULA</span>
+                <span class="p-sub">Professor ministrou as aulas em outro horário</span>
+              </button>
+              <button class="protocolo-btn abono-btn" id="btn-proto-abono" onclick="setProtocolo('abono')">
+                <span class="p-icon">🏥</span>
+                <span class="p-titulo">ABONO / ATESTADO</span>
+                <span class="p-sub">Atestado médico ou situação legalmente permitida</span>
+              </button>
+            </div>
+            <div class="abono-info" id="abono-info-box">
+              ⚖️ <strong>Abono legal:</strong> Todas as faltas deste professor no dia selecionado serão marcadas automaticamente como <strong>JUSTIFICADO</strong>.
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px">
+            <h3>Dados da Justificativa</h3>
             <label>Professor(a)</label>
-            <input type="text" id="rec-prof" placeholder="Nome do professor" list="lista-p2" autocomplete="off" oninput="filtrarPendentes()" />
+            <input type="text" id="rec-prof" placeholder="Nome do professor" list="lista-p2" autocomplete="off" oninput="onRecProfChange()" />
             <datalist id="lista-p2"></datalist>
-            <label>Data da recuperação</label>
-            <input type="date" id="rec-data" />
-            <label>Turma</label>
-            <select id="rec-turma"><option value="">— selecione —</option></select>
-            <label>Observação (opcional)</label>
+            <label id="rec-data-label">Data da recuperação</label>
+            <input type="date" id="rec-data" oninput="onRecDataChange()" />
+            <div id="abono-faltas-preview" class="abono-result">
+              <div class="ab-title">📋 Faltas que serão justificadas neste dia:</div>
+              <div id="abono-faltas-lista"></div>
+            </div>
+            <div id="rec-turma-row">
+              <label>Turma</label>
+              <select id="rec-turma"><option value="">— selecione —</option></select>
+            </div>
+            <label>Observação <span id="rec-obs-hint" style="font-weight:400;color:var(--muted)">(opcional)</span></label>
             <textarea id="rec-obs" placeholder="Detalhes da recuperação..."></textarea>
           </div>
         </div>
-        <div>
+
+        <!-- COLUNA DIREITA: aulas (recuperação) -->
+        <div id="rec-col-aulas">
           <div class="card">
             <h3>Aulas Recuperadas</h3>
             <p style="font-size:0.68rem;color:var(--muted);margin-bottom:12px">Selecione todas as aulas recuperadas (qualquer turno)</p>
@@ -559,6 +615,32 @@
           </div>
           <button class="btn-registrar green" onclick="registrarRecuperacao()">✔ REGISTRAR RECUPERAÇÃO</button>
         </div>
+
+        <!-- COLUNA DIREITA: abono -->
+        <div id="rec-col-abono" style="display:none">
+          <div class="card" style="background:#0a0f1a;border-color:#1a3a5a">
+            <h3 style="color:var(--accent3)">Abono por Atestado / Lei</h3>
+            <p style="font-size:0.72rem;color:var(--muted);margin-bottom:14px">
+              Ao confirmar, <strong style="color:var(--accent3)">todas as faltas</strong> deste professor no dia selecionado serão marcadas como <strong style="color:var(--accent3)">JUSTIFICADO</strong> automaticamente.
+            </p>
+            <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px">Tipo de documento apresentado:</div>
+            <select id="abono-tipo-doc">
+              <option value="Atestado médico">🏥 Atestado médico</option>
+              <option value="Atestado odontológico">🦷 Atestado odontológico</option>
+              <option value="Luto (familiar)">⚫ Luto (familiar)</option>
+              <option value="Licença maternidade/paternidade">👶 Licença maternidade/paternidade</option>
+              <option value="Convocação judicial">⚖️ Convocação judicial</option>
+              <option value="Convocação militar">🎖️ Convocação militar</option>
+              <option value="Doação de sangue">🩸 Doação de sangue</option>
+              <option value="Outro (legalmente permitido)">📄 Outro (legalmente permitido)</option>
+            </select>
+            <div id="abono-resumo" style="margin-top:16px;padding:12px;background:#0e1a2e;border:1px solid #1a3a5a;border-radius:8px;font-size:0.73rem;color:var(--muted);min-height:60px">
+              <em>Preencha professor e data para ver o resumo.</em>
+            </div>
+          </div>
+          <button class="btn-registrar" style="background:var(--accent3);color:#0e0f14;margin-top:14px" onclick="registrarAbono()">🏥 REGISTRAR ABONO / JUSTIFICATIVA</button>
+        </div>
+
       </div>
     </div>
 
@@ -844,15 +926,8 @@ function removerSlotTurma(sid){
 function aoMudarTurmaSlot(sid){
   const sel = document.getElementById(`slot-turma-${sid}`);
   const slot = document.getElementById(`slot-${sid}`);
-  if(sel && sel.value){
-    slot.classList.add('has-turma');
-    // Ao acionar uma turma, muda automaticamente para FALTA DE AULAS
-    if(tipoFalta !== 'aulas'){
-      setTipoFalta('aulas');
-    }
-  } else {
-    slot.classList.remove('has-turma');
-  }
+  if(sel && sel.value) slot.classList.add('has-turma');
+  else slot.classList.remove('has-turma');
   slotAulas[sid] = new Set();
   renderSlotAulas(sid);
 }
@@ -867,10 +942,6 @@ function toggleSlotAula(sid, cod){
 function renderSlotAulas(sid){
   const container = document.getElementById(`slot-aulas-${sid}`);
   if(!container) return;
-
-  const turmaEl = document.getElementById(`slot-turma-${sid}`);
-  const temTurma = turmaEl && turmaEl.value;
-
   if(tipoFalta === 'dia'){
     container.innerHTML = `<div class="slot-dia-info">📅 Falta do dia inteiro — sem aulas específicas.</div>`;
     return;
@@ -1054,14 +1125,70 @@ function derTurno(aulas){
   return 'noite';
 }
 
-// RECUPERAÇÃO
+// RECUPERAÇÃO — PROTOCOLO
+let protocoloAtual = 'recuperacao'; // 'recuperacao' | 'abono'
+
+function setProtocolo(p) {
+  protocoloAtual = p;
+  const isAbono = p === 'abono';
+  document.getElementById('btn-proto-rec').classList.toggle('active', !isAbono);
+  document.getElementById('btn-proto-abono').classList.toggle('active', isAbono);
+  document.getElementById('abono-info-box').style.display = isAbono ? 'block' : 'none';
+  document.getElementById('rec-col-aulas').style.display = isAbono ? 'none' : '';
+  document.getElementById('rec-col-abono').style.display = isAbono ? '' : 'none';
+  document.getElementById('rec-data-label').textContent = isAbono ? 'Data da ausência (atestado)' : 'Data da recuperação';
+  document.getElementById('rec-turma-row').style.display = isAbono ? 'none' : '';
+  document.getElementById('rec-obs-hint').textContent = isAbono ? '(ex: CRM do médico, número do atestado)' : '(opcional)';
+  // atualiza preview ao trocar protocolo
+  onRecDataChange();
+}
+
+function onRecProfChange() {
+  filtrarPendentes();
+  onRecDataChange();
+}
+
+function onRecDataChange() {
+  if (protocoloAtual !== 'abono') return;
+  const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const prof = document.getElementById('rec-prof').value.trim().toUpperCase();
+  const data = document.getElementById('rec-data').value;
+  const preview = document.getElementById('abono-faltas-preview');
+  const lista = document.getElementById('abono-faltas-lista');
+  const resumo = document.getElementById('abono-resumo');
+  if (!prof || !data) {
+    preview.style.display = 'none';
+    resumo.innerHTML = '<em>Preencha professor e data para ver o resumo.</em>';
+    return;
+  }
+  const faltas = registros.filter(r =>
+    r.tipo === 'falta' &&
+    normS(r.professor) === normS(prof) &&
+    r.data === data &&
+    !r.justificada
+  );
+  if (faltas.length === 0) {
+    preview.style.display = 'none';
+    resumo.innerHTML = '<span style="color:#f0a040">⚠ Nenhuma falta encontrada para este professor neste dia.</span>';
+    return;
+  }
+  const itens = faltas.map(r => {
+    const turma = r.turma ? (TURMA_MAP[r.turma]?.nome || r.turma) : '—';
+    const aulas = r.aulas && r.aulas.length > 0 ? r.aulas.join(', ') : 'Dia todo';
+    return `<div class="abono-falta-item">✔ ${turma} · ${TN[r.turno]||''} · Aulas: <strong>${aulas}</strong></div>`;
+  }).join('');
+  lista.innerHTML = itens;
+  preview.style.display = 'block';
+  resumo.innerHTML = `<strong style="color:var(--accent3)">${faltas.length} falta(s)</strong> serão justificadas de <strong style="color:#7dd0f0">${prof}</strong> no dia <strong style="color:#7dd0f0">${formatData(data)}</strong>.`;
+}
+
 function filtrarPendentes(){
   const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const prof=document.getElementById('rec-prof').value.trim().toUpperCase();
   const lista=document.getElementById('lista-pendentes');
   faltaLinkId=null;
   if(!prof){lista.innerHTML='<div style="color:var(--muted);font-size:0.75rem;padding:8px 0">Digite o nome do professor acima.</div>';return;}
-  const pend=registros.filter(r=>r.tipo==='falta'&&normS(r.professor)===normS(prof)&&!r.recuperada);
+  const pend=registros.filter(r=>r.tipo==='falta'&&normS(r.professor)===normS(prof)&&!r.recuperada&&!r.justificada);
   if(pend.length===0){lista.innerHTML='<div style="color:var(--green);font-size:0.75rem;padding:8px 0">✔ Sem faltas pendentes para este professor.</div>';return;}
   lista.innerHTML=pend.map(r=>`
     <div class="falta-option" id="fo-${r.id}" onclick="selecionarFalta(${r.id})">
@@ -1093,6 +1220,53 @@ function registrarRecuperacao(){
   salvar();toast(`✔ Recuperação de ${professor} registrada! (${aulasOrdenadas.join(', ')})`);
   aulasR.clear();renderTodasAulas('r');faltaLinkId=null;
   document.getElementById('rec-obs').value='';document.getElementById('rec-prof').value='';filtrarPendentes();
+}
+
+function registrarAbono(){
+  const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const professor = document.getElementById('rec-prof').value.trim().toUpperCase();
+  const data = document.getElementById('rec-data').value;
+  const obs = document.getElementById('rec-obs').value.trim();
+  const tipoDoc = document.getElementById('abono-tipo-doc').value;
+  if(!professor || !data){toast('⚠ Preencha o nome do professor e a data.',true);return;}
+  const faltas = registros.filter(r =>
+    r.tipo === 'falta' &&
+    normS(r.professor) === normS(professor) &&
+    r.data === data &&
+    !r.justificada
+  );
+  if(faltas.length === 0){toast('⚠ Nenhuma falta encontrada para justificar neste dia.',true);return;}
+  const obsCompleta = [tipoDoc, obs].filter(Boolean).join(' · ');
+  faltas.forEach(f => {
+    f.justificada = true;
+    f.recuperada = true; // marca como resolvida no fluxo existente
+    f.abono = {
+      data: new Date().toISOString(),
+      tipoDoc,
+      obs: obsCompleta
+    };
+    // Registrar entrada de abono
+    registros.unshift({
+      id: Date.now() + Math.random(),
+      tipo: 'abono',
+      data,
+      professor,
+      turma: f.turma,
+      turno: f.turno,
+      aulas: f.aulas,
+      obs: obsCompleta,
+      tipoDoc,
+      faltaOrigemId: f.id,
+      criadoEm: new Date().toISOString()
+    });
+  });
+  salvar();
+  toast(`✔ ${faltas.length} falta(s) de ${professor} justificada(s) por ${tipoDoc}!`);
+  document.getElementById('rec-prof').value='';
+  document.getElementById('rec-data').value='';
+  document.getElementById('rec-obs').value='';
+  document.getElementById('abono-faltas-preview').style.display='none';
+  document.getElementById('abono-resumo').innerHTML='<em>Preencha professor e data para ver o resumo.</em>';
 }
 
 // HISTÓRICO
@@ -1134,7 +1308,7 @@ function renderHistorico(){
         : `<span style="color:var(--muted);font-size:0.72rem">Dia todo</span>`;
       const turnoBadge = `<span class="tag ${TT[r.turno]||''}" style="font-size:0.6rem">${TN[r.turno]||''}</span>`;
       const statusBadge = r.tipo==='falta'
-        ? (r.recuperada ? '<span class="tag tag-rec" style="font-size:0.6rem">✔ Recup.</span>' : '<span class="tag tag-pend" style="font-size:0.6rem">Pend.</span>')
+        ? (r.justificada ? '<span class="tag" style="background:#0e1a2e;color:var(--accent3);border:1px solid #1a3a5a;font-size:0.6rem">⚖️ Justif.</span>' : r.recuperada ? '<span class="tag tag-rec" style="font-size:0.6rem">✔ Recup.</span>' : '<span class="tag tag-pend" style="font-size:0.6rem">Pend.</span>')
         : '';
       return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0;${grupo.length>1?'border-bottom:1px solid var(--border);':''}">
         ${nomeTurma ? `<span style="font-size:0.78rem;font-weight:600;min-width:130px">${nomeTurma}</span>` : '<span style="color:var(--muted);font-size:0.78rem;min-width:130px">—</span>'}
@@ -1150,7 +1324,7 @@ function renderHistorico(){
       ? `<span class="tag" style="background:#2a0e14;color:var(--accent2)">FALTA</span>`
         + (tiposSet.includes('DIA') ? '<br><span class="tag" style="background:#1a1200;color:#c8a840;font-size:0.58rem;margin-top:3px">📅 DIA</span>' : '')
         + (tiposSet.includes('AULAS') ? '<br><span class="tag" style="background:#0e1a1a;color:#40b0c8;font-size:0.58rem;margin-top:3px">🕐 AULAS</span>' : '')
-      : '<span class="tag tag-rec">RECUP.</span>';
+      : (r0.tipo==='abono' ? '<span class="tag" style="background:#0e1a2e;color:var(--accent3)">⚖️ ABONO</span>' : '<span class="tag tag-rec">RECUP.</span>');
 
     // Observações e coordenadores únicos
     const obsTextos = [...new Set(grupo.map(r=>r.obs).filter(Boolean))].join(' · ');
@@ -1370,21 +1544,27 @@ function entrarPortal(){
 function renderPortal(nome){
   const normS = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const F=registros.filter(r=>r.tipo==='falta'&&normS(r.professor)===normS(nome));
-  const pend=F.filter(r=>!r.recuperada);
-  const rec=F.filter(r=>r.recuperada);
+  const pend=F.filter(r=>!r.recuperada&&!r.justificada);
+  const just=F.filter(r=>r.justificada);
+  const rec=F.filter(r=>r.recuperada&&!r.justificada);
   const tA=F.reduce((s,r)=>s+r.aulas.length,0);
   const tP=pend.reduce((s,r)=>s+r.aulas.length,0);
   const tR=rec.reduce((s,r)=>s+r.aulas.length,0);
+  const tJ=just.reduce((s,r)=>s+r.aulas.length,0);
   document.getElementById('portal-nome-display').textContent='👨‍🏫 '+nome;
   document.getElementById('portal-summary').innerHTML=`
     <div class="summary-item"><div class="num" style="color:var(--accent)">${tA}</div><div class="lbl">Total aulas perdidas</div></div>
     <div class="summary-item"><div class="num" style="color:${tP>0?'var(--accent2)':'var(--green)'}">${tP}</div><div class="lbl">A recuperar</div></div>
     <div class="summary-item"><div class="num" style="color:var(--green)">${tR}</div><div class="lbl">Recuperadas</div></div>
+    <div class="summary-item"><div class="num" style="color:var(--accent3)">${tJ}</div><div class="lbl">Justificadas</div></div>
     <div class="summary-item"><div class="num">${F.length}</div><div class="lbl">Faltas registradas</div></div>`;
-  // Pendentes
+  // Pendentes + Justificadas
   const pEl=document.getElementById('portal-pendentes');
-  pEl.innerHTML=pend.length===0?`<div style="color:var(--green);font-size:0.82rem;padding:14px 0">✔ Nenhuma aula pendente de recuperação!</div>`:
-    pend.map(r=>`<div class="falta-item">
+  if(pend.length===0 && just.length===0){
+    pEl.innerHTML=`<div style="color:var(--green);font-size:0.82rem;padding:14px 0">✔ Nenhuma aula pendente de recuperação!</div>`;
+  } else {
+    let html='';
+    if(pend.length>0) html+=pend.map(r=>`<div class="falta-item">
       <div class="data-col"><div class="dt">${formatData(r.data)}</div><div class="dia">${r.dia||''}</div></div>
       <div class="info">
         <div class="turma-aulas">${r.turma?`Turma <strong>${TURMA_MAP[r.turma]?.nome||r.turma}</strong> · `:''}${r.cargo?`<span style="color:var(--muted)">${r.cargo}</span> · `:''}<span class="tag ${TT[r.turno]}">${TN[r.turno]}</span></div>
@@ -1396,6 +1576,20 @@ function renderPortal(nome){
         <div class="rec-detail">${r.aulas.length} aula${r.aulas.length>1?'s':''}</div>
       </div>
     </div>`).join('');
+    if(just.length>0) html+=`<div style="font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent3);margin:14px 0 6px">⚖️ Justificadas por Atestado / Lei</div>`+just.map(r=>`<div class="falta-item" style="border-color:#1a3a5a">
+      <div class="data-col"><div class="dt">${formatData(r.data)}</div><div class="dia">${r.dia||''}</div></div>
+      <div class="info">
+        <div class="turma-aulas">${r.turma?`Turma <strong>${TURMA_MAP[r.turma]?.nome||r.turma}</strong> · `:''}${r.cargo?`<span style="color:var(--muted)">${r.cargo}</span> · `:''}<span class="tag ${TT[r.turno]}">${TN[r.turno]}</span></div>
+        <div>Aulas: <span class="aulas-list" style="color:var(--accent3)">${r.aulas&&r.aulas.length>0?r.aulas.join(', '):'<em>Falta do dia</em>'}</span></div>
+        ${r.abono?`<div class="obs-text">📄 ${r.abono.tipoDoc}${r.abono.obs&&r.abono.obs!==r.abono.tipoDoc?' · '+r.abono.obs:''}</div>`:(r.obs?`<div class="obs-text">${r.obs}</div>`:'')}
+      </div>
+      <div class="status-col">
+        <span class="rec-badge justificada">⚖️ Justificada</span>
+        <div class="rec-detail">${r.aulas.length} aula${r.aulas.length>1?'s':''}</div>
+      </div>
+    </div>`).join('');
+    pEl.innerHTML=html;
+  }
   // Recuperadas
   const rEl=document.getElementById('portal-recuperadas');
   rEl.innerHTML=rec.length===0?`<div style="color:var(--muted);font-size:0.82rem;padding:14px 0">Nenhuma recuperação registrada ainda.</div>`:
