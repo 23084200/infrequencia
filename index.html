@@ -247,8 +247,38 @@
   .prof-row { display:flex; align-items:center; gap:10px; padding:9px 13px; background:var(--surface2); border-radius:6px; }
   .prof-row .name { flex:1; font-size:0.8rem; }
   .prof-row .count { font-family:'Syne',sans-serif; font-weight:700; font-size:0.82rem; color:var(--accent); }
-  .bar-wrap { flex:2; background:var(--border); border-radius:3px; height:5px; overflow:hidden; }
-  .bar { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s; }
+  .bar-wrap { flex:2; background:var(--border); border-radius:3px; height:8px; overflow:hidden; display:flex; }
+  .bar { height:100%; border-radius:0; transition:width 0.4s; }
+  .bar-pend { background:var(--accent2); }
+  .bar-just { background:var(--accent); }
+  .bar-rec  { background:var(--green); }
+  .bar-wrap .bar:first-child { border-radius:3px 0 0 3px; }
+  .bar-wrap .bar:last-child  { border-radius:0 3px 3px 0; }
+  .bar-wrap .bar:only-child  { border-radius:3px; }
+  .bar-legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:4px; font-size:0.62rem; color:var(--muted); }
+  .bar-legend span { display:flex; align-items:center; gap:4px; }
+  .bar-legend span::before { content:''; display:inline-block; width:8px; height:8px; border-radius:2px; }
+  .bar-legend .leg-pend::before { background:var(--accent2); }
+  .bar-legend .leg-just::before { background:var(--accent); }
+  .bar-legend .leg-rec::before  { background:var(--green); }
+
+  /* Stats sections */
+  .stats-section { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; margin-bottom:16px; }
+  .stats-section-title { font-family:'Syne',sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .stats-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .stats-turno-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .turno-stat-card { border-radius:8px; padding:14px 16px; border:1px solid; }
+  .turno-stat-card.manha { background:#111d2b; border-color:#1a3550; }
+  .turno-stat-card.tarde { background:#201608; border-color:#3d2a0a; }
+  .turno-stat-card.noite { background:#160f24; border-color:#2d1f4a; }
+  .turno-stat-card .t-label { font-family:'Syne',sans-serif; font-size:0.62rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px; }
+  .turno-stat-card.manha .t-label { color:var(--manha); }
+  .turno-stat-card.tarde .t-label { color:var(--tarde); }
+  .turno-stat-card.noite .t-label { color:var(--noite); }
+  .turno-stat-row { display:flex; justify-content:space-between; font-size:0.73rem; margin-bottom:5px; }
+  .turno-stat-row .t-key { color:var(--muted); }
+  .turno-stat-row .t-val { font-family:'Syne',sans-serif; font-weight:700; }
+  @media(max-width:700px){ .stats-turno-grid { grid-template-columns:1fr; } }
   .section-title { font-family:'Syne',sans-serif; font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; margin-top:22px; }
   .falta-option { background:var(--surface2); border:1.5px solid var(--border); border-radius:7px; padding:10px 13px; cursor:pointer; transition:border-color 0.15s; margin-bottom:6px; }
   .falta-option:hover { border-color:var(--muted); }
@@ -1505,29 +1535,135 @@ function renderStats(){
   const F=registros.filter(r=>r.tipo==='falta');
   const R=registros.filter(r=>r.tipo==='recuperacao');
   if(F.length===0){c.innerHTML=`<div class="empty-state"><div class="icon">📊</div>Sem dados ainda</div>`;return;}
+
+  // ── Totais gerais ──
   const tFA=F.reduce((s,r)=>s+r.aulas.length,0);
-  const tRA=R.reduce((s,r)=>s+r.aulas.length,0);
-  const pend=F.filter(r=>!r.recuperada).reduce((s,r)=>s+r.aulas.length,0);
-  const porP={};F.forEach(r=>{porP[r.professor]=(porP[r.professor]||0)+r.aulas.length;});
-  const rP=Object.entries(porP).sort((a,b)=>b[1]-a[1]);const mP=rP[0]?.[1]||1;
-  const porTr={manha:0,tarde:0,noite:0};F.forEach(r=>{porTr[r.turno]+=r.aulas.length;});
+  const tRec=F.filter(r=>r.recuperada&&!r.justificada).reduce((s,r)=>s+r.aulas.length,0);
+  const tJust=F.filter(r=>r.justificada).reduce((s,r)=>s+r.aulas.length,0);
+  const tPend=F.filter(r=>!r.recuperada&&!r.justificada).reduce((s,r)=>s+r.aulas.length,0);
+  const nRec=R.length; // registros de recuperação
+  const nJust=F.filter(r=>r.justificada).length;
+
+  // ── Por turno ──
+  const byTurno=t=>{
+    const fT=F.filter(r=>r.turno===t);
+    const aulas=fT.reduce((s,r)=>s+r.aulas.length,0);
+    const recAulas=fT.filter(r=>r.recuperada&&!r.justificada).reduce((s,r)=>s+r.aulas.length,0);
+    const justAulas=fT.filter(r=>r.justificada).reduce((s,r)=>s+r.aulas.length,0);
+    const pendAulas=fT.filter(r=>!r.recuperada&&!r.justificada).reduce((s,r)=>s+r.aulas.length,0);
+    return {faltas:fT.length, aulas, recAulas, justAulas, pendAulas};
+  };
+  const trM=byTurno('manha'), trT=byTurno('tarde'), trN=byTurno('noite');
+
+  // ── Por professor ──
+  const porP={};
+  F.forEach(r=>{
+    if(!porP[r.professor]) porP[r.professor]={total:0,rec:0,just:0,pend:0};
+    const a=r.aulas.length;
+    porP[r.professor].total+=a;
+    if(r.justificada) porP[r.professor].just+=a;
+    else if(r.recuperada) porP[r.professor].rec+=a;
+    else porP[r.professor].pend+=a;
+  });
+  const rP=Object.entries(porP).sort((a,b)=>b[1].total-a[1].total);
+  const mP=rP[0]?.[1].total||1;
+
+  // ── Por turma ──
   const porTu={};F.forEach(r=>{porTu[r.turma]=(porTu[r.turma]||0)+r.aulas.length;});
-  const rTu=Object.entries(porTu).sort((a,b)=>b[1]-a[1]).slice(0,8);const mTu=rTu[0]?.[1]||1;
+  const rTu=Object.entries(porTu).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const mTu=rTu[0]?.[1]||1;
+
+  // ── Barras tricolor por professor ──
+  function barraProf(p){
+    const {total,rec,just,pend}=p;
+    const pw=v=>Math.round(v/mP*100);
+    const pW=pw(pend), jW=pw(just), rW=pw(rec);
+    return `<div class="bar-wrap">
+      ${pend>0?`<div class="bar bar-pend" style="width:${pW}%" title="A recuperar: ${pend}"></div>`:''}
+      ${just>0?`<div class="bar bar-just" style="width:${jW}%" title="Justificadas: ${just}"></div>`:''}
+      ${rec>0?`<div class="bar bar-rec" style="width:${rW}%" title="Recuperadas: ${rec}"></div>`:''}
+    </div>`;
+  }
+
+  function turnoCard(label,emoji,cls,d){
+    return `<div class="turno-stat-card ${cls}">
+      <div class="t-label">${emoji} ${label}</div>
+      <div class="turno-stat-row"><span class="t-key">Registros de falta</span><span class="t-val">${d.faltas}</span></div>
+      <div class="turno-stat-row"><span class="t-key">Total de aulas</span><span class="t-val">${d.aulas}</span></div>
+      <div class="turno-stat-row"><span class="t-key" style="color:var(--accent2)">A recuperar</span><span class="t-val" style="color:var(--accent2)">${d.pendAulas}</span></div>
+      <div class="turno-stat-row"><span class="t-key" style="color:var(--accent)">Justificadas</span><span class="t-val" style="color:var(--accent)">${d.justAulas}</span></div>
+      <div class="turno-stat-row"><span class="t-key" style="color:var(--green)">Recuperadas</span><span class="t-val" style="color:var(--green)">${d.recAulas}</span></div>
+    </div>`;
+  }
+
   c.innerHTML=`
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num">${F.length}</div><div class="lbl">Registros falta</div></div>
-      <div class="stat-card"><div class="num">${tFA}</div><div class="lbl">Aulas perdidas</div></div>
-      <div class="stat-card"><div class="num" style="color:var(--green)">${tRA}</div><div class="lbl">Aulas recuperadas</div></div>
-      <div class="stat-card"><div class="num" style="color:var(--accent2)">${pend}</div><div class="lbl">Pendentes</div></div>
-      <div class="stat-card"><div class="num" style="color:var(--manha)">${porTr.manha}</div><div class="lbl">Faltas manhã</div></div>
-      <div class="stat-card"><div class="num" style="color:var(--tarde)">${porTr.tarde}</div><div class="lbl">Faltas tarde</div></div>
-      <div class="stat-card"><div class="num" style="color:var(--noite)">${porTr.noite}</div><div class="lbl">Faltas noite</div></div>
-      <div class="stat-card"><div class="num">${rP.length}</div><div class="lbl">Professores c/ falta</div></div>
+
+    <!-- ══ REGISTROS GERAIS ══ -->
+    <div class="stats-section">
+      <div class="stats-section-title">📊 Registros Gerais</div>
+      <div class="stats-grid" style="margin-bottom:0">
+        <div class="stat-card"><div class="num">${F.length}</div><div class="lbl">Registros de falta</div></div>
+        <div class="stat-card"><div class="num">${tFA}</div><div class="lbl">Total aulas perdidas</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--accent2)">${tPend}</div><div class="lbl">Aulas a recuperar</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--accent)">${tJust}</div><div class="lbl">Aulas justificadas</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--green)">${tRec}</div><div class="lbl">Aulas recuperadas</div></div>
+        <div class="stat-card"><div class="num">${nRec}</div><div class="lbl">Recuperações registradas</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--accent3)">${nJust}</div><div class="lbl">Dias justificados</div></div>
+        <div class="stat-card"><div class="num">${rP.length}</div><div class="lbl">Professores c/ falta</div></div>
+      </div>
     </div>
-    <p class="section-title">Professores com mais faltas</p>
-    <div class="prof-rank">${rP.slice(0,10).map(([n,v])=>`<div class="prof-row"><span class="name">${n}</span><div class="bar-wrap"><div class="bar" style="width:${Math.round(v/mP*100)}%"></div></div><span class="count">${v}</span></div>`).join('')}</div>
-    <p class="section-title">Turmas com mais aulas perdidas</p>
-    <div class="prof-rank">${rTu.map(([t,v])=>`<div class="prof-row"><span class="name">${t}</span><div class="bar-wrap"><div class="bar" style="width:${Math.round(v/mTu*100)}%;background:var(--accent3)"></div></div><span class="count" style="color:var(--accent3)">${v}</span></div>`).join('')}</div>`;
+
+    <!-- ══ REGISTROS POR TURNO ══ -->
+    <div class="stats-section">
+      <div class="stats-section-title">🕐 Registros por Turno</div>
+      <div class="stats-turno-grid">
+        ${turnoCard('Manhã','☀️','manha',trM)}
+        ${turnoCard('Tarde','🌤','tarde',trT)}
+        ${turnoCard('Noite','🌙','noite',trN)}
+      </div>
+    </div>
+
+    <!-- ══ AULAS RECUPERADAS ══ -->
+    <div class="stats-section">
+      <div class="stats-section-title">✅ Aulas Recuperadas e Dias Justificados</div>
+      <div class="stats-grid" style="margin-bottom:0">
+        <div class="stat-card"><div class="num" style="color:var(--green)">${tRec}</div><div class="lbl">Aulas recuperadas</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--green)">${byTurno('manha').recAulas}</div><div class="lbl">Recuperadas — manhã</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--green)">${byTurno('tarde').recAulas}</div><div class="lbl">Recuperadas — tarde</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--green)">${byTurno('noite').recAulas}</div><div class="lbl">Recuperadas — noite</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--accent3)">${tJust}</div><div class="lbl">Aulas justificadas</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--accent3)">${nJust}</div><div class="lbl">Dias justificados</div></div>
+      </div>
+    </div>
+
+    <!-- ══ PROFESSORES ══ -->
+    <div class="stats-section">
+      <div class="stats-section-title">👨‍🏫 Professores com mais faltas</div>
+      <div class="bar-legend" style="margin-bottom:12px">
+        <span class="leg-pend">A recuperar</span>
+        <span class="leg-just">Justificadas</span>
+        <span class="leg-rec">Recuperadas</span>
+      </div>
+      <div class="prof-rank">${rP.slice(0,10).map(([n,p])=>`
+        <div class="prof-row">
+          <span class="name">${n}</span>
+          ${barraProf(p)}
+          <span class="count" style="min-width:28px;text-align:right">${p.total}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- ══ TURMAS ══ -->
+    <div class="stats-section">
+      <div class="stats-section-title">🏫 Turmas com mais aulas perdidas</div>
+      <div class="prof-rank">${rTu.map(([t,v])=>`
+        <div class="prof-row">
+          <span class="name">${t}</span>
+          <div class="bar-wrap"><div class="bar bar-pend" style="width:${Math.round(v/mTu*100)}%"></div></div>
+          <span class="count" style="color:var(--accent3);min-width:28px;text-align:right">${v}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
 }
 
 // PORTAL PROFESSOR
